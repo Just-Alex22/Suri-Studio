@@ -7,7 +7,7 @@
 ![Language](https://img.shields.io/badge/Language:-Python-blue)
 ![Platform](https://img.shields.io/badge/Platform:-Linux%20%7C%20macOS%20%7C%20Windows-blue)
 
-![Main Window](assets/screenshot.png)
+![Main Window](assets/suristudio.png)
 
 > **Note:**
 > Suri Studio is in early development. Features and APIs may change between releases.
