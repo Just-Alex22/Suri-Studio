@@ -88,8 +88,8 @@ Linters are optional. Install only the ones relevant to your workflow:
 Clone the repository:
 
 ```bash
-git clone https://github.com/Just-Alex22/SuriStudio.git
-cd SuriStudio
+git clone https://github.com/Just-Alex22/Suri-Studio.git
+cd Suri-Studio
 ```
 
 Install Python dependencies:
@@ -103,7 +103,7 @@ pip install pyte ptyprocess --break-system-packages
 sudo apt install python3 python3-pip python3-pyside6
 pip install pyte ptyprocess --break-system-packages
 
-# Fedora / Nobara
+# Fedora / RHEL
 sudo dnf install python3 python3-pip python3-pyside6
 pip install pyte ptyprocess --break-system-packages
 

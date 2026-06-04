@@ -1,12 +1,3 @@
-# completer.py — Autocompletado tipo VSCode para Sonia
-#
-# Estrategia (sin LSP):
-#   1. Keywords + builtins del lenguaje detectado (estáticos, por lang)
-#   2. Palabras ya presentes en el documento (dinámicas)
-#   3. Snippets básicos por lenguaje (if, for, def, class…)
-#
-# UI: popup flotante con lista estilada. Tab/Enter confirma, Escape cierra.
-# Se activa automáticamente al escribir ≥ 2 caracteres de una palabra.
 
 import re
 from PySide6.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
@@ -15,18 +6,14 @@ from PySide6.QtGui     import QColor, QFont
 
 from core.theme import VSCode
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Vocabulario estático por lenguaje
-# ─────────────────────────────────────────────────────────────────────────────
 _LANG_WORDS: dict[str, list[str]] = {
     'python': [
-        # keywords
+
         'False','None','True','and','as','assert','async','await','break',
         'class','continue','def','del','elif','else','except','finally',
         'for','from','global','if','import','in','is','lambda','nonlocal',
         'not','or','pass','raise','return','try','while','with','yield',
-        # builtins
+
         'abs','all','any','bin','bool','breakpoint','bytes','callable','chr',
         'compile','complex','copyright','credits','delattr','dict','dir',
         'divmod','enumerate','eval','exec','exit','filter','float','format',
@@ -36,12 +23,12 @@ _LANG_WORDS: dict[str, list[str]] = {
         'ord','pow','print','property','quit','range','repr','reversed',
         'round','set','setattr','slice','sorted','staticmethod','str','sum',
         'super','tuple','type','vars','zip',
-        # dunder
+
         '__init__','__name__','__main__','__file__','__doc__','__class__',
         '__all__','__slots__','__repr__','__str__','__len__','__iter__',
         '__next__','__enter__','__exit__','__call__','__getitem__',
         'self','cls',
-        # stdlib frecuente
+
         'os','sys','re','json','math','time','datetime','pathlib','Path',
         'subprocess','threading','collections','itertools','functools',
         'argparse','logging','unittest','dataclasses','dataclass','field',
@@ -71,14 +58,14 @@ _LANG_WORDS: dict[str, list[str]] = {
         'then','catch','finally','resolve','reject','all','race','any',
     ],
     'typescript': [
-        # JS base +
+
         'async','await','break','case','catch','class','const','continue',
         'debugger','default','delete','do','else','export','extends',
         'finally','for','from','function','if','import','in','instanceof',
         'let','new','null','of','return','static','super','switch','this',
         'throw','true','false','try','typeof','undefined','var','void',
         'while','with','yield',
-        # TS específico
+
         'abstract','as','declare','enum','implements','interface','module',
         'namespace','never','override','private','protected','public',
         'readonly','require','type','unknown','infer','keyof','typeof',
@@ -102,7 +89,7 @@ _LANG_WORDS: dict[str, list[str]] = {
         'static_cast','struct','switch','template','this','thread_local',
         'throw','true','try','typedef','typeid','typename','union',
         'unsigned','using','virtual','void','volatile','wchar_t','while',
-        # stdlib
+
         'std','string','vector','map','unordered_map','set','unordered_set',
         'pair','tuple','optional','variant','array','span','queue','stack',
         'deque','list','forward_list','bitset','iostream','fstream',
@@ -254,7 +241,6 @@ _LANG_WORDS: dict[str, list[str]] = {
     ],
 }
 
-# Snippets: prefijo → expansión completa
 _SNIPPETS: dict[str, dict[str, str]] = {
     'python': {
         'def':   'def ():\n    ',
@@ -351,18 +337,12 @@ _SNIPPETS: dict[str, dict[str, str]] = {
     },
 }
 
-
 def get_lang_words(lang: str) -> list[str]:
     return _LANG_WORDS.get(lang, [])
-
 
 def get_snippets(lang: str) -> dict[str, str]:
     return _SNIPPETS.get(lang, {})
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Popup de autocompletado
-# ─────────────────────────────────────────────────────────────────────────────
 POPUP_QSS = f"""
 QListWidget {{
     background-color: #252526;
@@ -398,7 +378,6 @@ QScrollBar::handle:vertical {{
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 """
 
-# Iconos tipo letra para indicar el tipo de sugerencia
 _KIND_ICON = {
     'keyword':  ('kw',  '#c586c0'),
     'builtin':  ('fn',  '#dcdcaa'),
@@ -406,15 +385,13 @@ _KIND_ICON = {
     'word':     ('w',   '#858585'),
 }
 
-
 class CompletionPopup(QListWidget):
-    """Lista flotante que aparece debajo del cursor del editor."""
 
     MAX_ITEMS   = 12
-    MIN_PREFIX  = 2     # mínimo de caracteres para activar
+    MIN_PREFIX  = 2
 
     def __init__(self, editor):
-        super().__init__(editor.viewport())  # hijo del viewport para posicionarse bien
+        super().__init__(editor.viewport())
         self.editor = editor
         self.setStyleSheet(POPUP_QSS)
         self.setWindowFlags(Qt.WindowType.ToolTip)
@@ -426,25 +403,20 @@ class CompletionPopup(QListWidget):
 
         self.itemActivated.connect(self._on_activated)
 
-        # Timer para no recalcular en cada tecla
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
         self._timer.setInterval(120)
         self._timer.timeout.connect(self._refresh)
 
-    # ── API pública ───────────────────────────────────────────────────────
     def schedule_update(self):
-        """Llama esto tras cada tecla en el editor."""
+
         self._timer.start()
 
     def is_visible(self) -> bool:
         return self.isVisible()
 
     def handle_key(self, event) -> bool:
-        """
-        Intenta manejar la tecla si el popup está visible.
-        Devuelve True si la consumió (el editor no debe procesarla).
-        """
+
         if not self.isVisible():
             return False
         key = event.key()
@@ -466,7 +438,6 @@ class CompletionPopup(QListWidget):
             return True
         return False
 
-    # ── Construcción de sugerencias ───────────────────────────────────────
     def _refresh(self):
         prefix = self._current_prefix()
         if len(prefix) < self.MIN_PREFIX:
@@ -478,40 +449,34 @@ class CompletionPopup(QListWidget):
         snippets  = get_snippets(lang)
         doc_words = self._extract_doc_words()
 
-        # Snippets de usuario (mayor prioridad que los built-in)
         try:
             from core.user_snippets import get_snippets_for_lang
             user_snips = get_snippets_for_lang(lang)
         except Exception:
             user_snips = {}
 
-        candidates: list[tuple[str, str, str]] = []   # (label, insert, kind)
+        candidates: list[tuple[str, str, str]] = []
         pl = prefix.lower()
 
-        # 0. Snippets de usuario (prioridad máxima)
         for key in user_snips:
             if key.lower().startswith(pl) and key != prefix:
                 candidates.append((key, user_snips[key], 'snippet'))
 
-        # 1. Snippets built-in
         for key in snippets:
             if key.startswith(pl) and key != prefix and key not in user_snips:
                 candidates.append((key, snippets[key], 'snippet'))
 
-        # 2. Keywords / builtins del lenguaje
         for word in sorted(lang_kws):
             wl = word.lower()
             if wl.startswith(pl) and word != prefix:
                 kind = 'keyword' if word.islower() else 'builtin'
                 candidates.append((word, word, kind))
 
-        # 3. Palabras del documento
         for word in sorted(doc_words):
             wl = word.lower()
             if wl.startswith(pl) and word != prefix and word not in lang_kws:
                 candidates.append((word, word, 'word'))
 
-        # Deduplicar preservando orden
         seen   = set()
         unique = []
         for item in candidates:
@@ -533,7 +498,7 @@ class CompletionPopup(QListWidget):
         self.clear()
         for label, insert, kind in items:
             icon_text, icon_color = _KIND_ICON.get(kind, ('·', '#858585'))
-            # Guardar el texto de inserción como dato del item
+
             li = QListWidgetItem(f"  {label}")
             li.setData(Qt.ItemDataRole.UserRole, insert)
             li.setToolTip(
@@ -544,19 +509,19 @@ class CompletionPopup(QListWidget):
             self.addItem(li)
 
     def _reposition(self):
-        """Posiciona el popup justo debajo del cursor de texto."""
+
         cursor = self.editor.textCursor()
         rect   = self.editor.cursorRect(cursor)
-        # Convertir a coordenadas globales
+
         gpos   = self.editor.viewport().mapToGlobal(
             QPoint(rect.left(), rect.bottom() + 2)
         )
-        # Calcular tamaño
+
         n      = min(self.count(), self.MAX_ITEMS)
         item_h = 24
         w      = 280
         h      = n * item_h + 8
-        # Ajustar si sale de la pantalla
+
         screen = self.editor.screen().geometry()
         x      = min(gpos.x(), screen.right()  - w - 10)
         y      = gpos.y()
@@ -565,23 +530,20 @@ class CompletionPopup(QListWidget):
         self.move(x, y)
         self.setFixedSize(w, h)
 
-    # ── Extracción de palabras del documento ──────────────────────────────
     def _extract_doc_words(self) -> set[str]:
         text   = self.editor.toPlainText()
         words  = re.findall(r'\b[A-Za-z_]\w{2,}\b', text)
         return set(words)
 
-    # ── Palabra que el usuario está escribiendo ───────────────────────────
     def _current_prefix(self) -> str:
         cursor = self.editor.textCursor()
-        # Seleccionar hacia atrás hasta un delimitador
+
         block_text = cursor.block().text()
         col        = cursor.positionInBlock()
         text_left  = block_text[:col]
         m = re.search(r'[\w_]+$', text_left)
         return m.group(0) if m else ''
 
-    # ── Aceptar sugerencia ────────────────────────────────────────────────
     def _on_activated(self, item: QListWidgetItem):
         self._accept_current()
 
@@ -596,9 +558,9 @@ class CompletionPopup(QListWidget):
         self.hide()
 
     def _insert(self, prefix: str, completion: str):
-        """Borra el prefijo actual e inserta la completación."""
+
         cursor = self.editor.textCursor()
-        # Retroceder len(prefix) caracteres para borrar el prefijo
+
         for _ in range(len(prefix)):
             cursor.deletePreviousChar()
         cursor.insertText(completion)

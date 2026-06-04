@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QMessageBox
 
 from core.highlighter import SyntaxHighlighter
 
-
 _RUNNERS: dict[str, list[str]] = {
     'python':     ['python3', '{file}'],
     'javascript': ['node',    '{file}'],
@@ -53,17 +52,14 @@ _FILE_TEMPLATES: dict[str, str] = {
     'markdown':   '# Title\n\n',
 }
 
-
 def get_template(lang: str, stem: str = "Main") -> str:
     tpl = _FILE_TEMPLATES.get(lang, "")
     return tpl.replace("{Stem}", stem.capitalize())
-
 
 def _substitute(args: list[str], filepath: str) -> list[str]:
     p    = Path(filepath)
     subs = {'{file}': str(p), '{dir}': str(p.parent), '{stem}': p.stem}
     return [subs.get(a, a) for a in args]
-
 
 def build_only(filepath: str | None, terminal_widget, parent_widget) -> bool:
     if not filepath:
@@ -79,7 +75,6 @@ def build_only(filepath: str | None, terminal_widget, parent_widget) -> bool:
     compile_cmd = ' '.join(_substitute(info['compile'], filepath))
     _run_in_terminal(terminal_widget, compile_cmd, Path(filepath).parent)
     return True
-
 
 def run_file(filepath: str | None, terminal_widget, parent_widget) -> bool:
     if not filepath:
@@ -122,7 +117,7 @@ def run_file(filepath: str | None, terminal_widget, parent_widget) -> bool:
                             f"No sé cómo ejecutar archivos «{lang}».")
     return False
 
-
 def _run_in_terminal(terminal, cmd: str, cwd: Path):
+
     full = f"cd {shlex.quote(str(cwd))} && {cmd}"
     terminal.send_command(full)

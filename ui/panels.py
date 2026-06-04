@@ -1,7 +1,3 @@
-# ui/panels.py — Panel de problemas y Buscar en archivos
-# Completamente traducido con tr().
-# ProblemsPanel tiene un QTimer propio que pide re-lint cada 5s
-# cuando el panel está visible, así siempre muestra errores actualizados.
 
 from __future__ import annotations
 import os
@@ -19,20 +15,10 @@ from PySide6.QtGui  import QColor
 from core.theme     import VSCode
 from core.translate import tr
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Panel de Problemas
-# ─────────────────────────────────────────────────────────────────────────────
 class ProblemsPanel(QWidget):
-    """
-    Muestra la lista de errores/warnings del linter activo.
-    Se actualiza:
-      · Cuando el linter emite errors_updated (cada vez que el código cambia)
-      · Cada 5 segundos si el panel está visible (polling de seguridad)
-    Emite goto_line(filepath, line_0based) al hacer doble clic.
-    """
-    goto_line      = Signal(str, int)   # filepath, línea 0-based
-    refresh_needed = Signal()           # pide al mainwindow que re-ejecute el linter
+
+    goto_line      = Signal(str, int)
+    refresh_needed = Signal()
 
     POLL_MS = 5000
 
@@ -42,7 +28,6 @@ class ProblemsPanel(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Header
         hdr = QWidget()
         hdr.setStyleSheet(
             f"background:{VSCode.BG_LIGHT}; border-bottom:1px solid {VSCode.BORDER};"
@@ -69,7 +54,6 @@ class ProblemsPanel(QWidget):
         hdr_lay.addWidget(btn_refresh)
         lay.addWidget(hdr)
 
-        # Lista
         self._list = QListWidget()
         self._list.setAlternatingRowColors(False)
         self._list.setStyleSheet(f"""
@@ -96,12 +80,10 @@ class ProblemsPanel(QWidget):
 
         self._filepath = ""
 
-        # Polling: cuando el panel es visible, refrescar cada 5s
         self._poll = QTimer(self)
         self._poll.setInterval(self.POLL_MS)
         self._poll.timeout.connect(self.refresh_needed)
 
-    # ── Visibilidad → iniciar/detener polling ─────────────────────────────
     def showEvent(self, event):
         super().showEvent(event)
         self._poll.start()
@@ -110,7 +92,6 @@ class ProblemsPanel(QWidget):
         super().hideEvent(event)
         self._poll.stop()
 
-    # ── API pública ───────────────────────────────────────────────────────
     def update_problems(self, filepath: str, errors: list) -> None:
         self._filepath = filepath
         self._list.clear()
@@ -144,10 +125,6 @@ class ProblemsPanel(QWidget):
         if self._filepath and ln is not None:
             self.goto_line.emit(self._filepath, ln)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Worker para buscar en archivos
-# ─────────────────────────────────────────────────────────────────────────────
 _TEXT_EXTS = {
     '.py','.pyw','.js','.mjs','.ts','.tsx','.jsx','.html','.htm','.css',
     '.scss','.sass','.c','.cpp','.cc','.h','.hpp','.rs','.go','.java',
@@ -157,7 +134,6 @@ _TEXT_EXTS = {
 }
 _SKIP_DIRS = {'.git', '__pycache__', 'node_modules', '.venv', 'venv',
               '.tox', 'dist', 'build', '.mypy_cache', '.ruff_cache'}
-
 
 class SearchWorker(QThread):
     result_found = Signal(str, int, str, str)
@@ -211,10 +187,6 @@ class SearchWorker(QThread):
 
         self.finished.emit(self._count)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Panel de Búsqueda en Archivos
-# ─────────────────────────────────────────────────────────────────────────────
 class SearchInFilesPanel(QWidget):
     open_result = Signal(str, int)
 
@@ -224,7 +196,6 @@ class SearchInFilesPanel(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Header
         hdr = QWidget()
         hdr.setStyleSheet(
             f"background:{VSCode.BG_LIGHT}; border-bottom:1px solid {VSCode.BORDER};"
@@ -239,7 +210,6 @@ class SearchInFilesPanel(QWidget):
         hdr_lay.addStretch()
         lay.addWidget(hdr)
 
-        # Controles
         ctrl = QWidget()
         ctrl.setStyleSheet(f"background:{VSCode.BG_LIGHT}; padding:4px;")
         ctrl_lay = QVBoxLayout(ctrl)
@@ -279,7 +249,6 @@ class SearchInFilesPanel(QWidget):
         ctrl_lay.addLayout(opts_row)
         lay.addWidget(ctrl)
 
-        # Resultados
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
         self._tree.setIndentation(16)
@@ -380,14 +349,10 @@ class SearchInFilesPanel(QWidget):
         if data and data[0] == "match":
             self.open_result.emit(data[1], data[2])
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  BottomPanel — contenedor con tabs Problemas / Buscar
-# ─────────────────────────────────────────────────────────────────────────────
 class BottomPanel(QWidget):
     goto_line   = Signal(str, int)
     open_result = Signal(str, int)
-    # Señal para que mainwindow sepa que hay que re-lintear el tab activo
+
     refresh_lint = Signal()
 
     def __init__(self, parent=None):
@@ -399,7 +364,6 @@ class BottomPanel(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Tab bar
         tab_bar = QWidget()
         tab_bar.setStyleSheet(
             f"background:{VSCode.BG_LIGHT}; border-top:1px solid {VSCode.BORDER};"

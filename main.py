@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 import sys
 from pathlib import Path
 
@@ -13,7 +13,6 @@ from core.highlighter import SyntaxHighlighter
 from ui.mainwindow   import SoniaMainWindow
 from ui.splash       import make_splash
 from editor.editor   import SplitEditorContainer
-
 
 def _restore_session(window: SoniaMainWindow):
     snapshots = load_snapshots()
@@ -72,7 +71,6 @@ def _restore_session(window: SoniaMainWindow):
         QMessageBox.StandardButton.Ok,
     )
 
-
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("Suri Studio")
@@ -96,6 +94,7 @@ def main():
     window = SoniaMainWindow()
 
     def _launch():
+
         elapsed_ms = int((time.monotonic() - _t0) * 1000)
         remaining  = max(0, 800 - elapsed_ms)
         if remaining > 0:
@@ -111,7 +110,6 @@ def main():
 
     _launch()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()

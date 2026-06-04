@@ -1,4 +1,3 @@
-# core/autosave.py — Snapshots y recuperación de crashes
 
 import json
 import time
@@ -7,24 +6,19 @@ from pathlib import Path
 
 from PySide6.QtCore import QTimer, QObject, Signal
 
-
 def _autosave_dir() -> Path:
     d = Path.home() / ".cache" / "sonia" / "autosave"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
-
 def _snapshot_path(tab_id: str) -> Path:
     return _autosave_dir() / f"{tab_id}.suri_snapshot"
-
 
 def _all_snapshots() -> list[Path]:
     return list(_autosave_dir().glob("*.suri_snapshot"))
 
-
 def snapshots_exist() -> bool:
     return bool(_all_snapshots())
-
 
 def load_snapshots() -> list[dict]:
     result = []
@@ -37,7 +31,6 @@ def load_snapshots() -> list[dict]:
             pass
     return result
 
-
 def delete_all_snapshots():
     for p in _all_snapshots():
         try:
@@ -45,9 +38,8 @@ def delete_all_snapshots():
         except Exception:
             pass
 
-
 class AutosaveManager(QObject):
-    # 60 segundos — reducido de 30s para ahorrar CPU/IO
+
     INTERVAL_MS = 60_000
 
     def __init__(self, main_window, parent=None):

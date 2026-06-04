@@ -5,10 +5,8 @@ from PySide6.QtWidgets import QSplashScreen
 from PySide6.QtGui     import QPixmap, QColor, QFont, QPainter
 from PySide6.QtCore    import Qt
 
-
 def _assets() -> Path:
     return Path(__file__).parent.parent / "assets"
-
 
 def make_splash() -> QSplashScreen:
     banner = _assets() / "startup_banner.jpg"
@@ -22,7 +20,6 @@ def make_splash() -> QSplashScreen:
     splash = QSplashScreen(pix, Qt.WindowType.WindowStaysOnTopHint)
     splash.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
     return splash
-
 
 def _fallback() -> QPixmap:
     pix = QPixmap(480, 280)

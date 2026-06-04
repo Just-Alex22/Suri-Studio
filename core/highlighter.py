@@ -1,4 +1,3 @@
-# highlighter.py — Resaltado de sintaxis estilo VS Code Dark+
 
 from pathlib import Path
 from PySide6.QtGui import QColor, QTextCharFormat, QSyntaxHighlighter
@@ -6,13 +5,7 @@ from PySide6.QtCore import QRegularExpression
 
 from core.theme import VSCode
 
-
 class SyntaxHighlighter(QSyntaxHighlighter):
-    """
-    Resaltado de sintaxis para: Python, JavaScript/TypeScript, HTML, CSS/SCSS,
-    C/C++, Java, Rust, Go, Bash, SQL, JSON, TOML, YAML, Markdown, Ruby, PHP,
-    Kotlin, Swift, Lua.
-    """
 
     LANG_EXTENSIONS = {
         'python':     ['.py', '.pyw', '.pyi'],
@@ -46,7 +39,6 @@ class SyntaxHighlighter(QSyntaxHighlighter):
         self._rules = []
         self._build_rules()
 
-    # ── Formato ──────────────────────────────────────────────────────────
     def _fmt(self, color, bold=False, italic=False):
         fmt = QTextCharFormat()
         fmt.setForeground(QColor(color))
@@ -58,35 +50,33 @@ class SyntaxHighlighter(QSyntaxHighlighter):
         rx = QRegularExpression(pattern)
         self._rules.append((rx, fmt))
 
-    # ── Atajos de formato VS Code ─────────────────────────────────────────
     @property
-    def _kw(self):    return self._fmt(VSCode.PURPLE, bold=False)   # control flow
+    def _kw(self):    return self._fmt(VSCode.PURPLE, bold=False)
     @property
-    def _kw2(self):   return self._fmt(VSCode.KEYWORD2)             # tipos / storage
+    def _kw2(self):   return self._fmt(VSCode.KEYWORD2)
     @property
-    def _kw3(self):   return self._fmt(VSCode.BLUE_LIGHT)           # this/self/special
+    def _kw3(self):   return self._fmt(VSCode.BLUE_LIGHT)
     @property
-    def _str(self):   return self._fmt(VSCode.STRING)               # strings
+    def _str(self):   return self._fmt(VSCode.STRING)
     @property
-    def _num(self):   return self._fmt(VSCode.NUM)                  # números
+    def _num(self):   return self._fmt(VSCode.NUM)
     @property
-    def _com(self):   return self._fmt(VSCode.GREEN, italic=True)   # comentarios
+    def _com(self):   return self._fmt(VSCode.GREEN, italic=True)
     @property
-    def _fn(self):    return self._fmt(VSCode.YELLOW)               # funciones
+    def _fn(self):    return self._fmt(VSCode.YELLOW)
     @property
-    def _cls(self):   return self._fmt(VSCode.CYAN)                 # clases / tipos
+    def _cls(self):   return self._fmt(VSCode.CYAN)
     @property
-    def _deco(self):  return self._fmt(VSCode.DECORATOR)            # decoradores
+    def _deco(self):  return self._fmt(VSCode.DECORATOR)
     @property
-    def _tag(self):   return self._fmt(VSCode.BLUE)                 # tags HTML
+    def _tag(self):   return self._fmt(VSCode.BLUE)
     @property
-    def _attr(self):  return self._fmt(VSCode.BLUE_LIGHT)           # atributos
+    def _attr(self):  return self._fmt(VSCode.BLUE_LIGHT)
     @property
-    def _var(self):   return self._fmt(VSCode.BLUE_LIGHT)           # variables
+    def _var(self):   return self._fmt(VSCode.BLUE_LIGHT)
     @property
-    def _op(self):    return self._fmt(VSCode.FG)                   # operadores
+    def _op(self):    return self._fmt(VSCode.FG)
 
-    # ── Reglas por lenguaje ───────────────────────────────────────────────
     def _build_rules(self):
         self._rules = []
         lang = self.language
@@ -108,9 +98,9 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             self._add(r'@[\w.]+', self._deco)
             self._add(r'\bclass\s+(\w+)', self._cls)
             self._add(r'\bdef\s+(\w+)', self._fn)
-            # Triple-quoted strings primero
+
             self._add(r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')', self._str)
-            # f-strings y normales
+
             self._add(r'(f?b?r?"[^"\\]*(?:\\.[^"\\]*)*"|f?b?r?\'[^\'\\]*(?:\\.[^\'\\]*)*\')', self._str)
             self._add(r'\b(0x[0-9a-fA-F]+|0o[0-7]+|0b[01]+|\d+\.?\d*([eE][+-]?\d+)?j?)\b', self._num)
             self._add(r'#.*$', self._com)
@@ -122,18 +112,18 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                       r'this|throw|try|typeof|var|void|while|with|yield)\b', self._kw)
             self._add(r'\b(null|undefined|true|false|NaN|Infinity)\b', self._kw3)
             self._add(r'\b(string|number|boolean|object|symbol|bigint|any|never|void|'
-                      r'unknown|readonly|keyof|typeof|infer|is)\b', self._kw2)   # TS extra
+                      r'unknown|readonly|keyof|typeof|infer|is)\b', self._kw2)
             self._add(r'\b(console|document|window|Math|JSON|Promise|Array|Object|'
                       r'String|Number|Boolean|Symbol|Map|Set|WeakMap|WeakRef|Error|'
                       r'setTimeout|setInterval|clearTimeout|clearInterval|fetch|'
                       r'parseInt|parseFloat|isNaN|isFinite|encodeURI|decodeURI)\b', self._fn)
-            self._add(r'`[^`\\]*(?:\\.[^`\\]*)*`', self._str)   # template literals
+            self._add(r'`[^`\\]*(?:\\.[^`\\]*)*`', self._str)
             self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"', self._str)
             self._add(r"'[^'\\]*(?:\\.[^'\\]*)*'", self._str)
             self._add(r'\b(0x[0-9a-fA-F]+|\d+\.?\d*([eE][+-]?\d+)?n?)\b', self._num)
             self._add(r'//.*$', self._com)
             self._add(r'/\*[\s\S]*?\*/', self._com)
-            self._add(r'(?<![/])/(?![/*\s])[^/\n\\]*(?:\\.[^/\n\\]*)*/[gimsuy]*', self._str)  # regex
+            self._add(r'(?<![/])/(?![/*\s])[^/\n\\]*(?:\\.[^/\n\\]*)*/[gimsuy]*', self._str)
             self._add(r'(?<=\bfunction\s)(\w+)|(?<=\s)(\w+)(?=\s*\()', self._fn)
             self._add(r'(?<=class\s)(\w+)', self._cls)
             self._add(r'interface\s+(\w+)|type\s+(\w+)\s*=', self._cls)
@@ -150,21 +140,21 @@ class SyntaxHighlighter(QSyntaxHighlighter):
 
         elif lang in ('css', 'scss'):
             self._add(r'/\*[\s\S]*?\*/', self._com)
-            self._add(r'//.*$', self._com)             # SCSS
+            self._add(r'//.*$', self._com)
             self._add(r'@[\w-]+', self._kw)
-            self._add(r'\$[\w-]+', self._var)          # SCSS vars
-            # Selector
+            self._add(r'\$[\w-]+', self._var)
+
             self._add(r'[.#:]?[\w-]+(?:\s*[>+~]\s*[.#:]?[\w-]+)*\s*(?=\{)', self._cls)
-            # Pseudos
+
             self._add(r'::?[\w-]+', self._fn)
-            # Propiedad
+
             self._add(r'[\w-]+(?=\s*:)', self._attr)
-            # Valores de color
+
             self._add(r'#[0-9a-fA-F]{3,8}\b', self._num)
-            # Strings
+
             self._add(r'"[^"]*"', self._str)
             self._add(r"'[^']*'", self._str)
-            # Números con unidades
+
             self._add(r'-?\d+\.?\d*(%|px|em|rem|vh|vw|vmin|vmax|ch|ex|cm|mm|in|pt|pc|fr|s|ms|deg|rad|turn|grad|dpi|dpcm|dppx)?', self._num)
             self._add(r'\b(auto|none|inherit|initial|unset|revert|normal|bold|italic|'
                       r'flex|grid|block|inline|absolute|relative|fixed|sticky|hidden|'
@@ -173,7 +163,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
         elif lang == 'cpp':
             self._add(r'#\s*(include|define|undef|ifdef|ifndef|if|elif|else|endif|'
                       r'pragma|error|warning|line)\b', self._deco)
-            self._add(r'<[\w./]+>', self._str)         # includes
+            self._add(r'<[\w./]+>', self._str)
             self._add(r'\b(alignas|alignof|and|and_eq|asm|auto|bitand|bitor|bool|'
                       r'break|case|catch|char|char8_t|char16_t|char32_t|class|compl|'
                       r'concept|const|consteval|constexpr|constinit|const_cast|'
@@ -197,7 +187,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             self._add(r'//.*$', self._com)
             self._add(r'/\*[\s\S]*?\*/', self._com)
             self._add(r'\b\w+(?=\s*\()', self._fn)
-            self._add(r'\b[A-Z][A-Z0-9_]{2,}\b', self._kw3)  # MACROS
+            self._add(r'\b[A-Z][A-Z0-9_]{2,}\b', self._kw3)
             self._add(r'(?<=class\s|struct\s)(\w+)', self._cls)
 
         elif lang == 'java':
@@ -235,7 +225,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             self._add(r'//.*$', self._com)
             self._add(r'/\*[\s\S]*?\*/', self._com)
             self._add(r'#\[[\s\S]*?\]', self._deco)
-            self._add(r"'[a-z_]\w*\b(?!')", self._kw3)   # lifetimes
+            self._add(r"'[a-z_]\w*\b(?!')", self._kw3)
             self._add(r'(?<=fn\s)(\w+)', self._fn)
             self._add(r'(?<=struct\s|enum\s|trait\s|impl\s)(\w+)', self._cls)
 
@@ -265,7 +255,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                       r'exec|eval|getopts|select|time|coproc)\b', self._kw)
             self._add(r'\b(true|false|null)\b', self._kw3)
             self._add(r'\$\{[^}]+\}|\$[\w@#?$!*0-9-]+', self._var)
-            self._add(r'\$\([^)]+\)', self._kw3)   # command substitution
+            self._add(r'\$\([^)]+\)', self._kw3)
             self._add(r'"[^"]*"', self._str)
             self._add(r"'[^']*'", self._str)
             self._add(r'`[^`]*`', self._fn)
@@ -295,19 +285,19 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             self._add(r'\b\d+\.?\d*\b', self._num)
             self._add(r'--.*$', self._com)
             self._add(r'/\*[\s\S]*?\*/', self._com)
-            self._add(r'\b[A-Z][A-Z0-9_]+\b', self._cls)  # tablas en mayús
+            self._add(r'\b[A-Z][A-Z0-9_]+\b', self._cls)
 
         elif lang == 'json':
-            self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"\s*(?=:)', self._attr)   # keys
-            self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"', self._str)            # values
+            self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"\s*(?=:)', self._attr)
+            self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"', self._str)
             self._add(r'\b(true|false|null)\b', self._kw3)
             self._add(r'-?\d+\.?\d*([eE][+-]?\d+)?\b', self._num)
-            self._add(r'//.*$', self._com)   # JSONC
+            self._add(r'//.*$', self._com)
 
         elif lang == 'toml':
             self._add(r'#.*$', self._com)
-            self._add(r'^\s*\[+[\w.\s-]+\]+', self._cls)     # sections
-            self._add(r'^\s*[\w-]+\s*(?==)', self._attr)     # keys
+            self._add(r'^\s*\[+[\w.\s-]+\]+', self._cls)
+            self._add(r'^\s*[\w-]+\s*(?==)', self._attr)
             self._add(r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'', self._str)
             self._add(r'"[^"]*"|\'[^\']*\'', self._str)
             self._add(r'\b(true|false)\b', self._kw3)
@@ -317,9 +307,9 @@ class SyntaxHighlighter(QSyntaxHighlighter):
         elif lang == 'yaml':
             self._add(r'#.*$', self._com)
             self._add(r'^---$|^\.\.\.$', self._kw)
-            self._add(r'^\s*[\w-]+\s*(?=:)', self._attr)    # keys
-            self._add(r'(?<=:\s)&\w+|(?<=:\s)\*\w+', self._kw3)   # anchors/aliases
-            self._add(r'![\w/]+', self._deco)              # tags
+            self._add(r'^\s*[\w-]+\s*(?=:)', self._attr)
+            self._add(r'(?<=:\s)&\w+|(?<=:\s)\*\w+', self._kw3)
+            self._add(r'![\w/]+', self._deco)
             self._add(r'"[^"]*"|\'[^\']*\'', self._str)
             self._add(r'\b(true|false|null|yes|no|on|off)\b', self._kw3)
             self._add(r'-?\d+\.?\d*([eE][+-]?\d+)?\b', self._num)
@@ -345,12 +335,12 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                       r'do|else|elsif|end|ensure|false|for|if|in|module|next|nil|not|'
                       r'or|redo|rescue|retry|return|self|super|then|true|undef|unless|'
                       r'until|when|while|yield)\b', self._kw)
-            self._add(r':[a-zA-Z_]\w*', self._kw3)      # symbols
-            self._add(r'@{1,2}[\w]+', self._var)         # instance/class vars
-            self._add(r'\$[\w]+', self._kw3)             # global vars
+            self._add(r':[a-zA-Z_]\w*', self._kw3)
+            self._add(r'@{1,2}[\w]+', self._var)
+            self._add(r'\$[\w]+', self._kw3)
             self._add(r'"[^"\\]*(?:\\.[^"\\]*)*"', self._str)
             self._add(r"'[^'\\]*(?:\\.[^'\\]*)*'", self._str)
-            self._add(r'#\{[^}]*\}', self._fn)          # interpolation
+            self._add(r'#\{[^}]*\}', self._fn)
             self._add(r'#.*$', self._com)
             self._add(r'=begin[\s\S]*?=end', self._com)
             self._add(r'\b\d+\.?\d*\b', self._num)
@@ -448,7 +438,6 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             self._add(r'^\s*[\w-]+\s*(?==)', self._attr)
             self._add(r'(?<==\s*).*$', self._str)
 
-    # ── Qt override ───────────────────────────────────────────────────────
     def highlightBlock(self, text):
         for rx, fmt in self._rules:
             it = rx.globalMatch(text)
@@ -456,7 +445,6 @@ class SyntaxHighlighter(QSyntaxHighlighter):
                 m = it.next()
                 self.setFormat(m.capturedStart(), m.capturedLength(), fmt)
 
-    # ── API pública ───────────────────────────────────────────────────────
     def set_language(self, language):
         self.language = language
         self._build_rules()
@@ -468,7 +456,7 @@ class SyntaxHighlighter(QSyntaxHighlighter):
             return 'text'
         ext = Path(filepath).suffix.lower()
         name = Path(filepath).name.lower()
-        # Nombres especiales sin extensión
+
         special = {
             'makefile': 'bash', 'dockerfile': 'bash',
             '.gitignore': 'ini', '.env': 'ini',

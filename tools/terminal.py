@@ -1,18 +1,3 @@
-# terminal.py — Terminal PTY real basada en pyte + ptyprocess
-#
-# Arquitectura:
-#   PtyReaderThread   — QThread que lee del master PTY sin bloquear la UI
-#   TermScreen        — pyte.DiffScreen + pantalla alternativa (para vim/htop)
-#   TerminalView      — QWidget con QPainter, renderiza el grid de celdas
-#   TerminalWidget    — Contenedor con header y barra de título, API pública
-#
-# Requisitos:
-#   pip install pyte ptyprocess
-#
-# Compatibilidad:
-#   Linux / macOS  — os.openpty() vía ptyprocess
-#   Windows        — ptyprocess usa winpty si está disponible;
-#                    si no, cae a un modo degradado con QProcess
 
 from __future__ import annotations
 
@@ -36,8 +21,6 @@ from PySide6.QtGui  import (
 from core.theme     import VSCode, get_best_mono_font
 from core.translate import tr
 
-# ─── Detección de dependencias ────────────────────────────────────────────────
-
 _HAVE_PTY = False
 try:
     import pyte
@@ -47,8 +30,6 @@ except ImportError:
     pass
 
 _IS_WINDOWS = sys.platform == "win32"
-
-# ─── Paleta de colores ANSI ───────────────────────────────────────────────────
 
 _ANSI_COLORS: dict[str, str] = {
     "black":         "#1e1e1e",
@@ -73,9 +54,8 @@ _DEFAULT_FG = QColor("#d4d4d4")
 _DEFAULT_BG = QColor("#1e1e1e")
 _CURSOR_CLR = QColor("#aeafad")
 
-
 def _resolve_color(name: str, is_bg: bool) -> QColor:
-    """Convierte el string de color de pyte a QColor."""
+
     if name == "default":
         return _DEFAULT_BG if is_bg else _DEFAULT_FG
     if name in _ANSI_COLORS:
@@ -87,15 +67,8 @@ def _resolve_color(name: str, is_bg: bool) -> QColor:
             pass
     return _DEFAULT_BG if is_bg else _DEFAULT_FG
 
-
-# ─── Pantalla con soporte de pantalla alternativa ────────────────────────────
-
 if _HAVE_PTY:
     class TermScreen(pyte.DiffScreen):
-        """
-        DiffScreen extendido con pantalla alternativa (smcup/rmcup).
-        Vim, htop, less, man y cualquier programa ncurses la necesitan.
-        """
 
         def __init__(self, cols: int, rows: int):
             super().__init__(cols, rows)
@@ -137,8 +110,6 @@ if _HAVE_PTY:
             self._alt_active = False
             self.dirty.update(range(self.lines))
 
-# ─── Hilo lector del PTY ─────────────────────────────────────────────────────
-
 class PtyReaderThread(QThread):
     data_ready = Signal(bytes)
     pty_closed = Signal()
@@ -161,18 +132,10 @@ class PtyReaderThread(QThread):
     def stop(self):
         self._running = False
 
-
-# ─── Vista del terminal ───────────────────────────────────────────────────────
-
 class TerminalView(QWidget):
-    """
-    Renderiza el grid de pyte con QPainter.
-    Maneja teclado y resize del PTY.
-    """
 
     title_changed = Signal(str)
 
-    # Mapa Qt.Key → secuencia VT
     _KEY_MAP: dict = {
         Qt.Key.Key_Return:    b"\r",
         Qt.Key.Key_Enter:     b"\r",
@@ -236,8 +199,6 @@ class TerminalView(QWidget):
         self.setPalette(pal)
         self.setAutoFillBackground(True)
 
-    # ── Ciclo de vida ─────────────────────────────────────────────────────
-
     def start_shell(self, cwd: str | None = None):
         self._cols, self._rows = self._compute_grid()
         self._screen = TermScreen(self._cols, self._rows)
@@ -268,17 +229,9 @@ class TerminalView(QWidget):
         self._blink.start()
 
     def stop_shell(self):
-        """
-        Secuencia correcta para evitar 'QThread destroyed while running':
-          1. Parar timers (no más señales de blink)
-          2. Matar el proceso → cierra el fd del PTY master
-          3. Cerrar el fd explícitamente → desbloquea proc.read() en el hilo
-          4. Esperar al hilo con timeout generoso
-          5. Desconectar señales y soltar referencias
-        """
+
         self._blink.stop()
 
-        # Paso 2-3: matar proceso y cerrar PTY para desbloquear read()
         if self._proc is not None:
             try:
                 if self._proc.isalive():
@@ -286,25 +239,20 @@ class TerminalView(QWidget):
             except Exception:
                 pass
             try:
-                # Cerrar el fd master desbloquea inmediatamente el read()
-                # bloqueado en el hilo lector
+
                 self._proc.close()
             except Exception:
                 pass
             self._proc = None
 
-        # Paso 4-5: esperar al hilo y desconectar señales
         if self._reader is not None:
             self._reader.stop()
-            # Con el PTY cerrado, read() lanza OSError/EOFError y el hilo
-            # sale solo — 2 segundos es más que suficiente
+
             if not self._reader.wait(2000):
-                # Último recurso: terminar el hilo a la fuerza
+
                 self._reader.terminate()
                 self._reader.wait(1000)
-            # Desconectar señales ANTES de soltar la referencia para que
-            # los QueuedConnection pendientes en el event loop no lleguen
-            # a un receptor ya destruido
+
             try:
                 self._reader.data_ready.disconnect(self._on_data)
             except RuntimeError:
@@ -315,10 +263,8 @@ class TerminalView(QWidget):
                 pass
             self._reader = None
 
-    # ── Slots ─────────────────────────────────────────────────────────────
-
     def _on_data(self, data: bytes):
-        # Ignorar datos que lleguen tras stop_shell (señales encoladas)
+
         if self._screen is None or self._stream is None or self._proc is None:
             return
         self._stream.feed(data)
@@ -329,7 +275,7 @@ class TerminalView(QWidget):
         self._screen.dirty.clear()
 
     def _on_closed(self):
-        # El PTY se cerró (proceso terminó o stop_shell lo mató)
+
         self._blink.stop()
         self.update()
 
@@ -347,8 +293,6 @@ class TerminalView(QWidget):
     def _flush_repaint(self):
         self._repaint_pending = False
         self.update()
-
-    # ── Pintado ───────────────────────────────────────────────────────────
 
     def paintEvent(self, _event):
         if self._screen is None:
@@ -404,15 +348,12 @@ class TerminalView(QWidget):
                     mid = y + ch // 2
                     p.drawLine(x, mid, x + cw - 1, mid)
 
-        # Relleno del espacio vacío fuera del grid
         grid_w = self._screen.columns * cw
         grid_h = self._screen.lines   * ch
         if grid_w < self.width():
             p.fillRect(grid_w, 0, self.width() - grid_w, self.height(), _DEFAULT_BG)
         if grid_h < self.height():
             p.fillRect(0, grid_h, self.width(), self.height() - grid_h, _DEFAULT_BG)
-
-    # ── Teclado ───────────────────────────────────────────────────────────
 
     def keyPressEvent(self, event: QKeyEvent):
         if self._proc is None or not self._proc.isalive():
@@ -422,7 +363,6 @@ class TerminalView(QWidget):
         ctrl = Qt.KeyboardModifier.ControlModifier
         mods = event.modifiers()
 
-        # Ctrl + letra → byte de control
         if mods & ctrl:
             if   key == Qt.Key.Key_C: self._write(b"\x03"); return
             elif key == Qt.Key.Key_D: self._write(b"\x04"); return
@@ -449,8 +389,6 @@ class TerminalView(QWidget):
             except OSError:
                 pass
 
-    # ── Resize ────────────────────────────────────────────────────────────
-
     def resizeEvent(self, event):
         super().resizeEvent(event)
         new_cols, new_rows = self._compute_grid()
@@ -469,8 +407,6 @@ class TerminalView(QWidget):
 
     def sizeHint(self) -> QSize:
         return QSize(self._cols * self._cw, self._rows * self._ch)
-
-    # ── Helpers ───────────────────────────────────────────────────────────
 
     def _compute_grid(self) -> tuple[int, int]:
         w    = max(self.width(),  self._cw * 40)
@@ -494,8 +430,6 @@ class TerminalView(QWidget):
         env["LINES"]            = str(self._rows)
         return env
 
-    # ── API pública ───────────────────────────────────────────────────────
-
     def send_text(self, text: str):
         self._write(text.encode("utf-8", errors="replace"))
 
@@ -510,15 +444,7 @@ class TerminalView(QWidget):
     def is_alive(self) -> bool:
         return bool(self._proc and self._proc.isalive())
 
-
-# ─── Widget contenedor público ────────────────────────────────────────────────
-
 class TerminalWidget(QWidget):
-    """
-    Contenedor de TerminalView con header.
-    Mantiene la misma API pública que el TerminalWidget anterior
-    (set_cwd, send_command) para que mainwindow.py no necesite cambios.
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -528,7 +454,6 @@ class TerminalWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ── Header ────────────────────────────────────────────────────────
         hdr = QWidget()
         hdr.setFixedHeight(30)
         hdr.setStyleSheet(
@@ -556,7 +481,6 @@ class TerminalWidget(QWidget):
         hdr_lay.addWidget(self._btn_kill)
         layout.addWidget(hdr)
 
-        # ── Área del terminal ─────────────────────────────────────────────
         if _HAVE_PTY:
             self._view = TerminalView()
             self._view.title_changed.connect(self._on_title)
@@ -565,8 +489,6 @@ class TerminalWidget(QWidget):
         else:
             self._view = None
             self._build_fallback(layout)
-
-    # ── Fallback sin pyte ─────────────────────────────────────────────────
 
     def _build_fallback(self, layout):
         from PySide6.QtWidgets import QPlainTextEdit, QLineEdit
@@ -620,8 +542,6 @@ class TerminalWidget(QWidget):
         proc.start("bash", ["-c", cmd])
         self._fb_proc = proc
 
-    # ── Slots ─────────────────────────────────────────────────────────────
-
     def _on_title(self, title: str):
         label = (title[:40] + "…") if len(title) > 40 else title
         self._lbl_title.setText(label or tr("TERMINAL"))
@@ -631,8 +551,6 @@ class TerminalWidget(QWidget):
             self._view.stop_shell()
             self._view.start_shell(cwd=self.cwd)
             self._lbl_title.setText(tr("TERMINAL"))
-
-    # ── API pública ───────────────────────────────────────────────────────
 
     def set_cwd(self, path: str):
         if path and os.path.isdir(path):

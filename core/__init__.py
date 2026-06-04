@@ -1,4 +1,4 @@
-# core — tema, resaltado, autocompletado, autosave, settings, translate, snippets
+
 from .theme      import VSCode, FONT_FAMILY, build_qss, load_theme, set_theme, get_theme, THEMES
 from .highlighter import SyntaxHighlighter
 from .completer  import CompletionPopup

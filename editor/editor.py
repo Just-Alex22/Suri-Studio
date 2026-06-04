@@ -1,4 +1,3 @@
-# editor.py — CodeEditor con todas las features
 
 import re
 from pathlib import Path
@@ -36,17 +35,12 @@ _AUTOCOMPLETE_LANGS = {
     'bash', 'html', 'css', 'scss', 'sql', 'markdown', 'json', 'yaml',
 }
 
-# Diálogo para elegir lenguaje al crear archivo nuevo
 _ALL_LANGS = [
     'text', 'python', 'javascript', 'typescript', 'html', 'css', 'scss',
     'cpp', 'java', 'rust', 'go', 'bash', 'sql', 'json', 'toml',
     'yaml', 'markdown', 'ruby', 'php', 'kotlin', 'swift', 'lua', 'xml', 'ini',
 ]
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Diálogo: elegir lenguaje para archivo nuevo
-# ─────────────────────────────────────────────────────────────────────────────
 class NewFileDialog(QDialog):
     def __init__(self, suggested_lang='text', parent=None):
         super().__init__(parent)
@@ -88,10 +82,6 @@ class NewFileDialog(QDialog):
     def chosen_lang(self) -> str:
         return self.combo.currentText()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Área de numeración de líneas
-# ─────────────────────────────────────────────────────────────────────────────
 class LineNumberArea(QWidget):
     def __init__(self, editor):
         super().__init__(editor)
@@ -103,10 +93,6 @@ class LineNumberArea(QWidget):
     def paintEvent(self, event):
         self.editor._paint_line_numbers(event)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Editor principal
-# ─────────────────────────────────────────────────────────────────────────────
 class CodeEditor(QPlainTextEdit):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -136,7 +122,7 @@ class CodeEditor(QPlainTextEdit):
         self.blockCountChanged.connect(self._update_line_number_area_width)
         self.updateRequest.connect(self._update_line_number_area)
         self.cursorPositionChanged.connect(self._on_cursor_changed)
-        # Redibujar la franja de cambios cuando cambia el estado de modificación
+
         self.document().modificationChanged.connect(
             lambda _: self.line_number_area.update()
         )
@@ -146,11 +132,9 @@ class CodeEditor(QPlainTextEdit):
 
         self._auto_pairs = {'"': '"', "'": "'", '(': ')', '[': ']', '{': '}'}
 
-        # Autocompletado — carga diferida: se instancia al primer keystroke
         self._popup = None
         self.textChanged.connect(self._on_text_changed)
 
-        # Resaltado de ocurrencias — timer para no recalcular en cada tecla
         self._occurrence_timer = QTimer(self)
         self._occurrence_timer.setSingleShot(True)
         self._occurrence_timer.setInterval(300)
@@ -159,14 +143,12 @@ class CodeEditor(QPlainTextEdit):
         self._occurrence_fmt.setBackground(QColor("#3a3a2a"))
         self._occurrence_fmt.setForeground(QColor(VSCode.YELLOW))
 
-        # Bracket matching
         self._bracket_open  = "({["
         self._bracket_close = ")}]"
         self._bracket_fmt   = QTextCharFormat()
         self._bracket_fmt.setBackground(QColor("#3b4048"))
         self._bracket_fmt.setForeground(QColor(VSCode.CYAN))
 
-        # Word wrap state
         self._word_wrap    = False
         self._lint_manager = None
 
@@ -183,7 +165,6 @@ class CodeEditor(QPlainTextEdit):
         self._pos_timer.timeout.connect(self._record_position)
         self.cursorPositionChanged.connect(lambda: self._pos_timer.start())
 
-    # ── Historial de posición ─────────────────────────────────────────────
     def _record_position(self) -> None:
         if not self._pos_recording:
             return
@@ -215,7 +196,6 @@ class CodeEditor(QPlainTextEdit):
         self.centerCursor()
         self._pos_recording = True
 
-    # ── Marcadores de línea ───────────────────────────────────────────────
     def toggle_bookmark(self) -> None:
         line = self.textCursor().blockNumber()
         if line in self._bookmarks:
@@ -264,7 +244,6 @@ class CodeEditor(QPlainTextEdit):
         c.setPosition(self.document().findBlockByNumber(target).position())
         self.setTextCursor(c); self.centerCursor()
 
-    # ── Ir a definición ───────────────────────────────────────────────────
     def goto_definition(self) -> None:
         import shutil, subprocess
         cursor = self.textCursor()
@@ -327,7 +306,6 @@ class CodeEditor(QPlainTextEdit):
     def _current_lang(self):
         return self.highlighter.language if self.highlighter else 'text'
 
-    # ── Word wrap ─────────────────────────────────────────────────────────
     def toggle_word_wrap(self):
         self._word_wrap = not self._word_wrap
         if self._word_wrap:
@@ -336,11 +314,10 @@ class CodeEditor(QPlainTextEdit):
             self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         return self._word_wrap
 
-    # ── Números de línea ──────────────────────────────────────────────────
     def _line_number_area_width(self):
         digits = len(str(max(1, self.blockCount())))
         fm = QFontMetricsF(self.font())
-        # 4px extra a la izquierda para la franja de cambios
+
         return int(fm.horizontalAdvance('9') * (digits + 2)) + 14
 
     def _update_line_number_area_width(self, _):
@@ -396,7 +373,6 @@ class CodeEditor(QPlainTextEdit):
             bottom    = top + self.blockBoundingRect(block).height()
             block_num += 1
 
-    # ── Señales de cursor/texto ───────────────────────────────────────────
     def _on_cursor_changed(self):
         self._highlight_current_line()
         self._match_brackets()
@@ -405,7 +381,7 @@ class CodeEditor(QPlainTextEdit):
     def _on_text_changed(self):
         lang = self._current_lang()
         if lang in _AUTOCOMPLETE_LANGS:
-            # Instanciar el popup la primera vez que el usuario escribe
+
             if self._popup is None:
                 from core.completer import CompletionPopup
                 self._popup = CompletionPopup(self)
@@ -413,7 +389,6 @@ class CodeEditor(QPlainTextEdit):
         elif self._popup:
             self._popup and self._popup.hide()
 
-    # ── Resaltado de línea actual ─────────────────────────────────────────
     def _highlight_current_line(self):
         sel = QTextEdit.ExtraSelection()
         sel.format.setBackground(QColor("#282828"))
@@ -423,11 +398,10 @@ class CodeEditor(QPlainTextEdit):
         sel._kind = 'curline'
         self._refresh_extra_selections(curline=sel)
 
-    # ── Resaltado de ocurrencias ──────────────────────────────────────────
     def _highlight_occurrences(self):
         cursor = self.textCursor()
         if not cursor.hasSelection():
-            # Seleccionar la palabra bajo el cursor
+
             cursor.select(QTextCursor.SelectionType.WordUnderCursor)
         word = cursor.selectedText().strip()
 
@@ -447,7 +421,6 @@ class CodeEditor(QPlainTextEdit):
 
         self._refresh_extra_selections(occurrences=occur_sels)
 
-    # ── Bracket matching ──────────────────────────────────────────────────
     def _match_brackets(self):
         cursor = self.textCursor()
         pos    = cursor.position()
@@ -469,7 +442,6 @@ class CodeEditor(QPlainTextEdit):
                 i += step
             return -1
 
-        # Carácter antes o en el cursor
         for offset in (0, -1):
             p = pos + offset
             if 0 <= p < len(text):
@@ -500,7 +472,6 @@ class CodeEditor(QPlainTextEdit):
 
         self._refresh_extra_selections(brackets=bracket_sels)
 
-    # ── Gestión centralizada de ExtraSelections ───────────────────────────
     def _refresh_extra_selections(self, **kwargs):
         if not hasattr(self, '_extra_store'):
             self._extra_store = {}
@@ -516,7 +487,6 @@ class CodeEditor(QPlainTextEdit):
                 combined.append(val)
         self.setExtraSelections(combined)
 
-    # ── Operaciones de texto ──────────────────────────────────────────────
     def duplicate_line(self):
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
@@ -576,7 +546,7 @@ class CodeEditor(QPlainTextEdit):
         c.endEditBlock()
 
     def remove_all_comments(self):
-        """Elimina todos los comentarios del documento (líneas enteras e inline)."""
+
         lang   = self._current_lang()
         marker = LANG_COMMENT.get(lang, '#')
         if not marker:
@@ -590,30 +560,26 @@ class CodeEditor(QPlainTextEdit):
             stripped = text.lstrip()
             next_b = block.next()
             if stripped.startswith(marker):
-                # Línea entera de comentario — borrar bloque completo.
-                # Seleccionamos desde el inicio del bloque hasta el inicio
-                # del siguiente (incluye el \n), excepto si es el último
-                # bloque del documento (donde no hay \n final).
+
                 c = QTextCursor(block)
                 c.movePosition(QTextCursor.MoveOperation.StartOfBlock)
                 if next_b.isValid():
-                    # Hay bloque siguiente: seleccionar hasta su inicio (incluye \n)
+
                     c.movePosition(
                         QTextCursor.MoveOperation.NextBlock,
                         QTextCursor.MoveMode.KeepAnchor,
                     )
                 else:
-                    # Último bloque: extender la selección hacia atrás para
-                    # incluir el \n que lo separa del bloque anterior (si existe).
+
                     start = block.position()
-                    end   = block.position() + block.length() - 1  # sin \n final de Qt
+                    end   = block.position() + block.length() - 1
                     if start > 0:
-                        c.setPosition(start - 1)   # retroceder al \n anterior
+                        c.setPosition(start - 1)
                     c.setPosition(max(end, c.position()),
                                   QTextCursor.MoveMode.KeepAnchor)
                 c.removeSelectedText()
             else:
-                # Comentario inline — buscar marcador fuera de strings
+
                 idx = self._find_comment_start(text, marker)
                 if idx > 0:
                     c = QTextCursor(block)
@@ -623,7 +589,7 @@ class CodeEditor(QPlainTextEdit):
                         QTextCursor.MoveMode.KeepAnchor
                     )
                     c.removeSelectedText()
-                    # Limpiar espacio en blanco sobrante al final
+
                     new_text = block.text().rstrip()
                     c2 = QTextCursor(block)
                     c2.select(QTextCursor.SelectionType.BlockUnderCursor)
@@ -633,11 +599,7 @@ class CodeEditor(QPlainTextEdit):
 
     @staticmethod
     def _find_comment_start(text: str, marker: str) -> int:
-        """
-        Devuelve la posición del marcador de comentario ignorando
-        los que están dentro de strings (simples o dobles).
-        Devuelve -1 si no hay comentario fuera de strings.
-        """
+
         in_single = False
         in_double = False
         i = 0
@@ -724,7 +686,6 @@ class CodeEditor(QPlainTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.NextBlock)
         cursor.endEditBlock()
 
-    # ── keyPressEvent ─────────────────────────────────────────────────────
     def keyPressEvent(self, event):
         if self._popup and self._popup.handle_key(event):
             return
@@ -852,10 +813,6 @@ class CodeEditor(QPlainTextEdit):
                   if s.format.background().color() != QColor(VSCode.SELECTION)]
         self.setExtraSelections(others + sels)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Barra Buscar / Reemplazar
-# ─────────────────────────────────────────────────────────────────────────────
 class FindReplaceBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -902,10 +859,6 @@ class FindReplaceBar(QWidget):
             self.find_input.setFocus()
             self.find_input.selectAll()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Tab de editor
-# ─────────────────────────────────────────────────────────────────────────────
 class EditorTab(QWidget):
     modified_changed  = Signal(bool)
 
@@ -925,7 +878,6 @@ class EditorTab(QWidget):
         layout.addWidget(self.editor)
         layout.addWidget(self.find_bar)
 
-        # Linter — carga diferida: se crea tras detectar el lenguaje
         self._lint_mgr = None
 
         self.editor.document().contentsChanged.connect(self._on_modified)
@@ -947,13 +899,12 @@ class EditorTab(QWidget):
             self._init_linter_if_needed(lang)
 
     def _init_linter_if_needed(self, lang: str) -> None:
-        """Instancia LintManager solo si el lenguaje tiene soporte de linting."""
+
         _LINTABLE = {'python', 'javascript', 'typescript', 'bash', 'ruby', 'css', 'scss'}
         if lang in _LINTABLE and self._lint_mgr is None:
             from editor.linter import LintManager
             self._lint_mgr = LintManager(self.editor, parent=self)
 
-    # ── Carga / guardado ──────────────────────────────────────────────────
     def _load_file(self, path):
         try:
             with open(path, 'r', encoding='utf-8', errors='replace') as f:
@@ -965,7 +916,7 @@ class EditorTab(QWidget):
             self.editor.document().setModified(False)
             self._is_new = False
             self._init_linter_if_needed(lang)
-            # Restaurar posición del cursor
+
             self._restore_cursor()
         except Exception as e:
             self.editor.setPlainText(tr("Error opening").format(err=e))
@@ -991,7 +942,7 @@ class EditorTab(QWidget):
             pass
 
     def save_cursor(self) -> None:
-        """Guarda la posición actual del cursor en QSettings."""
+
         if not self.filepath:
             return
         try:
@@ -1024,7 +975,7 @@ class EditorTab(QWidget):
             self.modified_changed.emit(False)
             self._delete_snapshot()
             self.save_cursor()
-            # Re-detectar lenguaje si cambió la extensión
+
             lang = SyntaxHighlighter.detect_language(self.filepath)
             if lang != self.editor._current_lang():
                 self.editor.set_language(lang)
@@ -1059,7 +1010,6 @@ class EditorTab(QWidget):
         name = Path(self.filepath).name if self.filepath else tr("Untitled")
         return name
 
-
     def _on_modified(self):
         self.modified_changed.emit(self.is_modified())
 
@@ -1077,7 +1027,6 @@ class EditorTab(QWidget):
             self.editor.setTextCursor(cursor)
             self.editor.centerCursor()
 
-    # ── Buscar / Reemplazar ───────────────────────────────────────────────
     def _flags(self):
         f = QTextDocument.FindFlag(0)
         if self.find_bar.case_check.isChecked():
@@ -1131,16 +1080,8 @@ class EditorTab(QWidget):
                                      flags=re.IGNORECASE)
         self.editor.setPlainText(new_content)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  SplitEditorTab — dos editores lado a lado
-# ─────────────────────────────────────────────────────────────────────────────
 class SplitEditorContainer(QWidget):
-    """
-    Contenedor que aloja uno o dos EditorTab en un QSplitter.
-    El tab principal vive en self.primary.
-    Al hacer split se añade self.secondary.
-    """
+
     modified_changed  = Signal(bool)
 
     def __init__(self, filepath=None, parent=None, initial_lang=None):
@@ -1159,7 +1100,6 @@ class SplitEditorContainer(QWidget):
 
         self.primary.modified_changed.connect(self.modified_changed)
 
-    # Delegación al primario para compatibilidad con mainwindow
     @property
     def editor(self):  return self.primary.editor
     @property
@@ -1177,7 +1117,7 @@ class SplitEditorContainer(QWidget):
         self.primary.load_content(content, language)
 
     def split(self, filepath=None):
-        """Abre un segundo editor a la derecha."""
+
         if self.secondary:
             return
         self.secondary = EditorTab(filepath=filepath, parent=self)
@@ -1186,7 +1126,7 @@ class SplitEditorContainer(QWidget):
         self.secondary.editor.setFocus()
 
     def close_split(self):
-        """Cierra el editor secundario."""
+
         if self.secondary:
             self.secondary.setParent(None)
             self.secondary.deleteLater()

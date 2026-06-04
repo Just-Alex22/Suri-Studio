@@ -1,7 +1,3 @@
-# core/theme.py — Sistema de temas para Sonia
-#
-# VSCode es una clase cuyos atributos de clase se actualizan al cambiar tema.
-# El código existente (VSCode.BG, VSCode.FG, etc.) no necesita ningún cambio.
 
 from __future__ import annotations
 from PySide6.QtCore import QSettings
@@ -12,8 +8,7 @@ ORG = "CuerdOS"
 FONT_FAMILY_EDITOR = "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace"
 FONT_FAMILY        = FONT_FAMILY_EDITOR
 FONT_SIZE          = "13px"
-FONT_FAMILY_UI     = ""   # se resuelve en build_qss() tras crear QApplication
-
+FONT_FAMILY_UI     = ""
 
 def _resolve_system_font() -> str:
     import sys
@@ -33,16 +28,8 @@ def _resolve_system_font() -> str:
         pass
     return "Arial"
 
-
 def get_ui_scale() -> float:
-    """
-    Devuelve el factor de escala real de la pantalla principal.
 
-    En Wayland con compositors minimalistas (LabWC, sway, river…) el
-    scale factor no siempre llega correctamente a Qt porque depende de
-    que el compositor implemente wp-fractional-scale-v1.  Leemos
-    directamente del QScreen disponible, que es la fuente más fiable.
-    """
     try:
         from PySide6.QtWidgets import QApplication
         app = QApplication.instance()
@@ -54,14 +41,8 @@ def get_ui_scale() -> float:
         pass
     return 1.0
 
-
 def scaled_font_size(base_pt: int = 10) -> int:
-    """
-    Devuelve el tamaño de fuente de UI escalado al DPI real.
-    Compensa el caso en que el compositor Wayland no reportó scale
-    pero el DPI lógico sí indica una pantalla HiDPI.
-    Siempre devuelve al menos 1 para que QFont no se queje.
-    """
+
     try:
         from PySide6.QtWidgets import QApplication
         app = QApplication.instance()
@@ -117,29 +98,26 @@ THEMES: dict[str, str] = {
     "gruvbox":    "Gruvbox Dark",
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Paletas completas — todos los atributos que usa el código
-# ─────────────────────────────────────────────────────────────────────────────
 _PALETTES: dict[str, dict] = {
     "vscode": {
-        # Fondos
+
         "BG":             "#1e1e1e",
         "BG_LIGHT":       "#252526",
         "BG_LIGHTER":     "#2d2d30",
         "BORDER":         "#3c3c3c",
-        # Texto
+
         "FG":             "#d4d4d4",
         "FG_DIM":         "#858585",
         "FG_INACTIVE":    "#6d6d6d",
         "WHITE":          "#ffffff",
-        # Acentos
+
         "BLUE_ACCENT":    "#007acc",
         "BLUE":           "#569cd6",
         "BLUE_LIGHT":     "#9cdcfe",
-        # Statusbar
+
         "STATUSBAR_BG":   "#007acc",
         "STATUSBAR_FG":   "#ffffff",
-        # Sintaxis
+
         "GREEN":          "#6a9955",
         "STRING":         "#ce9178",
         "YELLOW":         "#dcdcaa",
@@ -148,12 +126,12 @@ _PALETTES: dict[str, dict] = {
         "NUM":            "#b5cea8",
         "KEYWORD2":       "#569cd6",
         "DECORATOR":      "#dcdcaa",
-        # Terminal
+
         "TERMINAL_BG":    "#0c0c0c",
         "TERMINAL_FG":    "#cccccc",
-        # Selección
+
         "SELECTION":      "#094771",
-        # Dots de pestañas
+
         "TAB_DOT_MODIFIED": "#e5c07b",
         "TAB_DOT_SAVED":    "#4ec9b0",
         "TAB_DOT_NEW":      "#858585",
@@ -247,17 +225,8 @@ _PALETTES: dict[str, dict] = {
     },
 }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  VSCode — clase simple con atributos de clase actualizables
-# ─────────────────────────────────────────────────────────────────────────────
 class VSCode:
-    """
-    Clase de colores del tema activo.
-    Uso: VSCode.BG, VSCode.FG, VSCode.BLUE_ACCENT, etc.
-    Los atributos se actualizan al llamar a set_theme().
-    """
-    # Valores iniciales (VSCode Dark+ por defecto)
+
     BG             = "#1e1e1e"
     BG_LIGHT       = "#252526"
     BG_LIGHTER     = "#2d2d30"
@@ -286,44 +255,35 @@ class VSCode:
     TAB_DOT_SAVED    = "#4ec9b0"
     TAB_DOT_NEW      = "#858585"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  API pública
-# ─────────────────────────────────────────────────────────────────────────────
 _current_theme: str = "vscode"
-
 
 def get_theme() -> str:
     return _current_theme
 
-
 def set_theme(name: str) -> None:
-    """Cambia el tema activo y actualiza todos los atributos de VSCode."""
+
     global _current_theme
     if name not in _PALETTES:
         return
     _current_theme = name
     palette = _PALETTES[name]
-    # Actualizar los atributos de clase de VSCode
+
     for key, val in palette.items():
         setattr(VSCode, key, val)
     QSettings(ORG, APP).setValue("ui/theme", name)
 
-
 def load_theme() -> None:
-    """Carga el tema guardado en QSettings. Llamar antes de construir la UI."""
+
     saved = QSettings(ORG, APP).value("ui/theme", "vscode")
     set_theme(saved if saved in _PALETTES else "vscode")
-
 
 def build_qss() -> str:
     global FONT_FAMILY_UI
     if not FONT_FAMILY_UI:
         FONT_FAMILY_UI = _resolve_system_font()
 
-    # Tamaño de fuente de UI adaptado al DPI real del compositor
-    ui_font_pt  = scaled_font_size(10)          # puntos para QFont
-    ui_font_css = f"{ui_font_pt}pt"             # en el QSS usamos pt, no px
+    ui_font_pt  = scaled_font_size(10)
+    ui_font_css = f"{ui_font_pt}pt"
 
     bg           = VSCode.BG
     bg_light     = VSCode.BG_LIGHT
@@ -542,6 +502,5 @@ QSlider::handle:horizontal {{
 }}
 QSlider::sub-page:horizontal {{ background: {blue}; }}
 """
-
 
 VSCODE_QSS = ""

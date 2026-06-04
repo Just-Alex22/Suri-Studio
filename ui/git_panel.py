@@ -1,5 +1,3 @@
-# ui/git_panel.py — Panel Git lateral de Sonia
-# Todos los strings UI usan tr() para soporte de 11 idiomas.
 
 from __future__ import annotations
 import shutil
@@ -16,10 +14,6 @@ from PySide6.QtGui   import QColor, QFont
 from core.theme     import VSCode
 from core.translate import tr
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Utilidades
-# ─────────────────────────────────────────────────────────────────────────────
 def _git(args: list[str], cwd: str) -> tuple[str, str, int]:
     try:
         r = subprocess.run(
@@ -29,7 +23,6 @@ def _git(args: list[str], cwd: str) -> tuple[str, str, int]:
         return r.stdout.strip(), r.stderr.strip(), r.returncode
     except Exception as e:
         return "", str(e), -1
-
 
 def find_repo_root(path: str) -> str | None:
     if not path or not shutil.which("git"):
@@ -43,7 +36,6 @@ def find_repo_root(path: str) -> str | None:
     except Exception:
         return None
 
-
 _STATUS_META: dict[str, tuple[str, str]] = {
     "M":  ("M", "#e5c07b"),
     "A":  ("A", "#98c379"),
@@ -54,10 +46,6 @@ _STATUS_META: dict[str, tuple[str, str]] = {
     "??": ("?", "#858585"),
 }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Workers
-# ─────────────────────────────────────────────────────────────────────────────
 class GitStatusWorker(QThread):
     done = Signal(list)
 
@@ -79,7 +67,6 @@ class GitStatusWorker(QThread):
                 items.append((xy, path))
         self.done.emit(items)
 
-
 class GitDiffWorker(QThread):
     done = Signal(str)
 
@@ -94,7 +81,6 @@ class GitDiffWorker(QThread):
             out, _, _ = _git(["diff", "--cached", "--", self._relpath], self._repo)
         self.done.emit(out)
 
-
 class GitActionWorker(QThread):
     done = Signal(bool, str)
 
@@ -107,10 +93,6 @@ class GitActionWorker(QThread):
         out, err, code = _git(self._args, self._repo)
         self.done.emit(code == 0, out or err or "")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Panel Git
-# ─────────────────────────────────────────────────────────────────────────────
 class GitPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -122,7 +104,6 @@ class GitPanel(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # ── Header ────────────────────────────────────────────────────────
         hdr = QWidget()
         hdr.setStyleSheet(
             f"background:{VSCode.BG_LIGHT}; border-bottom:1px solid {VSCode.BORDER};"
@@ -147,7 +128,6 @@ class GitPanel(QWidget):
         hdr_lay.addWidget(btn_ref)
         lay.addWidget(hdr)
 
-        # ── Barra de acciones ─────────────────────────────────────────────
         action_bar = QWidget()
         action_bar.setStyleSheet(
             f"background:{VSCode.BG_LIGHT}; border-bottom:1px solid {VSCode.BORDER};"
@@ -189,7 +169,6 @@ class GitPanel(QWidget):
 
         lay.addWidget(action_bar)
 
-        # ── Árbol con diff expandible ─────────────────────────────────────
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
         self._tree.setIndentation(12)
@@ -205,7 +184,6 @@ class GitPanel(QWidget):
         self._tree.itemExpanded.connect(self._on_expanded)
         lay.addWidget(self._tree, 1)
 
-        # ── Status ────────────────────────────────────────────────────────
         self._lbl_status = QLabel(tr("No repo"))
         self._lbl_status.setStyleSheet(
             f"color:{VSCode.FG_INACTIVE}; font-size:11px; padding:4px 10px;"
@@ -213,7 +191,6 @@ class GitPanel(QWidget):
         )
         lay.addWidget(self._lbl_status)
 
-    # ── API pública ───────────────────────────────────────────────────────
     def set_repo(self, path: str) -> None:
         root = find_repo_root(path)
         if root == self._repo:
@@ -240,7 +217,6 @@ class GitPanel(QWidget):
         self._status_worker.done.connect(self._on_status)
         self._status_worker.start()
 
-    # ── Estado ───────────────────────────────────────────────────────────
     def _on_status(self, items: list) -> None:
         self._tree.clear()
         if not items:
@@ -282,7 +258,6 @@ class GitPanel(QWidget):
         total = len(items)
         self._lbl_status.setText(tr("git_n_changes").format(n=total))
 
-    # ── Diff expandible ───────────────────────────────────────────────────
     def _on_expanded(self, item: QTreeWidgetItem) -> None:
         data = item.data(0, Qt.ItemDataRole.UserRole)
         if not data or data[0] != "file":
@@ -293,7 +268,7 @@ class GitPanel(QWidget):
                 w = GitDiffWorker(self._repo, data[1])
                 w.done.connect(lambda diff, i=item: self._on_diff(i, diff))
                 w.start()
-                item._dw = w   # evitar GC
+                item._dw = w
 
     def _on_diff(self, item: QTreeWidgetItem, diff: str) -> None:
         item.takeChildren()
@@ -322,7 +297,6 @@ class GitPanel(QWidget):
             trunc.setForeground(0, QColor(VSCode.FG_INACTIVE))
             item.addChild(trunc)
 
-    # ── Acciones ──────────────────────────────────────────────────────────
     def _do_push(self):
         self._run(["push"], tr("git_push_ok"))
 
@@ -369,7 +343,6 @@ class GitPanel(QWidget):
             QMessageBox.critical(self, "Git", tr("git_error").format(err=msg))
             self._lbl_status.setText(tr("git_error_status"))
 
-    # ── Helpers ───────────────────────────────────────────────────────────
     def _set_btns(self, enabled: bool) -> None:
         for b in [self._btn_push, self._btn_pull,
                   self._btn_commit, self._btn_reset]:

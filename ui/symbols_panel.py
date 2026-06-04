@@ -12,7 +12,6 @@ from PySide6.QtGui   import QColor
 from core.theme     import VSCode
 from core.translate import tr
 
-
 _ICONS = {
     "class":    "C", "function": "f", "method":   "m",
     "variable": "v", "import":   "i", "constant": "K", "section":  "#",
@@ -22,7 +21,6 @@ _COLORS = {
     "variable": "#9cdcfe", "import":   "#858585", "constant": "#4fc1ff",
     "section":  "#569cd6",
 }
-
 
 def parse_python_symbols(code: str) -> list[dict]:
     symbols = []
@@ -48,7 +46,6 @@ def parse_python_symbols(code: str) -> list[dict]:
                     symbols.append({"name": t.id, "kind": kind, "line": node.lineno, "parent": None})
     symbols.sort(key=lambda s: s["line"])
     return symbols
-
 
 _REGEXES: dict[str, list] = {
     "javascript": [
@@ -98,7 +95,6 @@ _REGEXES: dict[str, list] = {
     "markdown": [(r'^#{1,6}\s+(.+)', "section")],
 }
 
-
 def parse_generic_symbols(code: str, lang: str) -> list[dict]:
     symbols = []
     for i, line in enumerate(code.splitlines(), 1):
@@ -108,7 +104,6 @@ def parse_generic_symbols(code: str, lang: str) -> list[dict]:
                 symbols.append({"name": m.group(1).strip(), "kind": kind, "line": i, "parent": None})
                 break
     return symbols
-
 
 class SymbolsPanel(QWidget):
     goto_line = Signal(int)

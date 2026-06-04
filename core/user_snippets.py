@@ -1,15 +1,3 @@
-# core/user_snippets.py — Snippets personalizados del usuario
-#
-# Se guardan en ~/.config/sonia/snippets.json con este formato:
-# {
-#   "python": {
-#     "mysnip": "def my_function():\n    ",
-#     "header": "# -*- coding: utf-8 -*-\n# Author: \n"
-#   },
-#   "javascript": { ... }
-# }
-#
-# El SnippetEditorDialog permite añadir/editar/borrar snippets desde la UI.
 
 from __future__ import annotations
 import json
@@ -33,12 +21,8 @@ _ALL_LANGS = [
     'swift', 'lua', 'markdown',
 ]
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  I/O
-# ─────────────────────────────────────────────────────────────────────────────
 def load_user_snippets() -> dict[str, dict[str, str]]:
-    """Carga el archivo de snippets del usuario. Devuelve {} si no existe."""
+
     p = snippets_path()
     if not p.exists():
         return {}
@@ -47,9 +31,8 @@ def load_user_snippets() -> dict[str, dict[str, str]]:
     except Exception:
         return {}
 
-
 def save_user_snippets(data: dict[str, dict[str, str]]) -> None:
-    """Guarda el dict de snippets en disco."""
+
     try:
         snippets_path().write_text(
             json.dumps(data, ensure_ascii=False, indent=2),
@@ -58,20 +41,11 @@ def save_user_snippets(data: dict[str, dict[str, str]]) -> None:
     except Exception:
         pass
 
-
 def get_snippets_for_lang(lang: str) -> dict[str, str]:
-    """Devuelve los snippets de usuario para un lenguaje específico."""
+
     return load_user_snippets().get(lang, {})
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Diálogo de gestión de snippets
-# ─────────────────────────────────────────────────────────────────────────────
 class SnippetEditorDialog(QDialog):
-    """
-    Diálogo para gestionar snippets personalizados.
-    Selector de lenguaje → lista de snippets → editor de prefijo/cuerpo.
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -86,7 +60,6 @@ class SnippetEditorDialog(QDialog):
         lay.setContentsMargins(0, 0, 0, 8)
         lay.setSpacing(0)
 
-        # ── Header ────────────────────────────────────────────────────────
         hdr = QWidget()
         hdr.setStyleSheet(
             f"background:{VSCode.BG}; border-bottom:1px solid {VSCode.BORDER};"
@@ -112,13 +85,11 @@ class SnippetEditorDialog(QDialog):
         hdr_lay.addWidget(self._lang_combo)
         lay.addWidget(hdr)
 
-        # ── Área principal ────────────────────────────────────────────────
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setStyleSheet(
             f"QSplitter::handle {{ background:{VSCode.BORDER}; width:1px; }}"
         )
 
-        # Panel izquierdo: lista de snippets
         left = QWidget()
         left.setMinimumWidth(200)
         left.setMaximumWidth(280)
@@ -147,7 +118,6 @@ class SnippetEditorDialog(QDialog):
         self._list.currentRowChanged.connect(self._on_snippet_selected)
         left_lay.addWidget(self._list, 1)
 
-        # Botones lista
         btn_bar = QWidget()
         btn_bar.setStyleSheet(f"background:{VSCode.BG_LIGHT}; border-top:1px solid {VSCode.BORDER};")
         btn_bar_lay = QHBoxLayout(btn_bar)
@@ -168,7 +138,6 @@ class SnippetEditorDialog(QDialog):
         left_lay.addWidget(btn_bar)
         splitter.addWidget(left)
 
-        # Panel derecho: editor del snippet
         right = QWidget()
         right_lay = QVBoxLayout(right)
         right_lay.setContentsMargins(12, 12, 12, 8)
@@ -214,19 +183,16 @@ class SnippetEditorDialog(QDialog):
         splitter.setSizes([220, 480])
         lay.addWidget(splitter, 1)
 
-        # Botones del diálogo
         bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         bb.rejected.connect(self.reject)
         bb.setContentsMargins(12, 0, 12, 0)
         lay.addWidget(bb, 0, Qt.AlignmentFlag.AlignRight)
 
-        # Conectar cambios del editor de snippet
         self._prefix_input.textChanged.connect(self._on_editor_changed)
         self._body_editor.textChanged.connect(self._on_editor_changed)
 
         self._refresh_list()
 
-    # ── Lógica interna ────────────────────────────────────────────────────
     def _on_lang_changed(self, lang: str) -> None:
         self._current_lang = lang
         self._refresh_list()
@@ -280,7 +246,7 @@ class SnippetEditorDialog(QDialog):
         self._data[self._current_lang][prefix] = body
         save_user_snippets(self._data)
         self._refresh_list()
-        # Seleccionar el snippet recién guardado
+
         for i in range(self._list.count()):
             if self._list.item(i).text() == prefix:
                 self._list.setCurrentRow(i)

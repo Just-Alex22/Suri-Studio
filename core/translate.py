@@ -1,5 +1,3 @@
-# core/translate.py — Sistema de traducciones para Sonia
-# Idiomas: es, en, de, fr, pt, ja, ko, ca, it, tr, ru
 
 from __future__ import annotations
 from PySide6.QtCore import QSettings
@@ -21,20 +19,14 @@ LANGUAGES: dict[str, str] = {
     "ru": "Русский",
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Tabla de traducciones
-#  Formato abreviado — columnas: es | en | de | fr | pt | ja | ko | ca | it | tr | ru
-# ─────────────────────────────────────────────────────────────────────────────
 _T: dict[str, dict[str, str]] = {
 
-    # ── Menús principales ─────────────────────────────────────────────────
     "File":     {"es":"Archivo",   "en":"File",     "de":"Datei",     "fr":"Fichier",   "pt":"Arquivo",  "ja":"ファイル",   "ko":"파일",    "ca":"Fitxer",   "it":"File",     "tr":"Dosya",   "ru":"Файл"},
     "Edit":     {"es":"Editar",    "en":"Edit",     "de":"Bearbeiten","fr":"Édition",   "pt":"Editar",   "ja":"編集",       "ko":"편집",    "ca":"Edita",    "it":"Modifica", "tr":"Düzenle", "ru":"Правка"},
     "View":     {"es":"Ver",       "en":"View",     "de":"Ansicht",   "fr":"Affichage", "pt":"Ver",      "ja":"表示",       "ko":"보기",    "ca":"Visualitza","it":"Visualizza","tr":"Görünüm","ru":"Вид"},
     "Run":      {"es":"Ejecutar",  "en":"Run",      "de":"Ausführen", "fr":"Exécuter",  "pt":"Executar", "ja":"実行",       "ko":"실행",    "ca":"Executa",  "it":"Esegui",   "tr":"Çalıştır","ru":"Запуск"},
     "Help":     {"es":"Ayuda",     "en":"Help",     "de":"Hilfe",     "fr":"Aide",      "pt":"Ajuda",    "ja":"ヘルプ",     "ko":"도움말",  "ca":"Ajuda",    "it":"Aiuto",    "tr":"Yardım",  "ru":"Справка"},
 
-    # ── Archivo ───────────────────────────────────────────────────────────
     "New":               {"es":"Nuevo",          "en":"New",           "de":"Neu",           "fr":"Nouveau",       "pt":"Novo",          "ja":"新規",         "ko":"새로 만들기","ca":"Nou",          "it":"Nuovo",        "tr":"Yeni",         "ru":"Новый"},
     "Open…":             {"es":"Abrir…",         "en":"Open…",         "de":"Öffnen…",       "fr":"Ouvrir…",       "pt":"Abrir…",        "ja":"開く…",        "ko":"열기…",     "ca":"Obre…",        "it":"Apri…",        "tr":"Aç…",          "ru":"Открыть…"},
     "Save":              {"es":"Guardar",        "en":"Save",          "de":"Speichern",     "fr":"Enregistrer",   "pt":"Salvar",        "ja":"保存",         "ko":"저장",      "ca":"Desa",         "it":"Salva",        "tr":"Kaydet",       "ru":"Сохранить"},
@@ -45,7 +37,6 @@ _T: dict[str, dict[str, str]] = {
     "No recent files":   {"es":"Sin archivos recientes","en":"No recent files","de":"Keine letzten Dateien","fr":"Aucun fichier récent","pt":"Sem arquivos recentes","ja":"最近のファイルなし","ko":"최근 파일 없음","ca":"Cap fitxer recent","it":"Nessun file recente","tr":"Son dosya yok","ru":"Нет недавних файлов"},
     "Clear recent":      {"es":"Limpiar recientes","en":"Clear recent","de":"Verlauf löschen","fr":"Effacer récents","pt":"Limpar recentes","ja":"履歴を消去","ko":"최근 지우기","ca":"Neteja recents","it":"Cancella recenti","tr":"Temizle","ru":"Очистить историю"},
 
-    # ── Editar ────────────────────────────────────────────────────────────
     "Undo":              {"es":"Deshacer",       "en":"Undo",          "de":"Rückgängig",    "fr":"Annuler",       "pt":"Desfazer",      "ja":"元に戻す",     "ko":"실행 취소", "ca":"Desfés",       "it":"Annulla",      "tr":"Geri al",      "ru":"Отменить"},
     "Redo":              {"es":"Rehacer",        "en":"Redo",          "de":"Wiederholen",   "fr":"Rétablir",      "pt":"Refazer",       "ja":"やり直し",     "ko":"다시 실행", "ca":"Refés",        "it":"Ripristina",   "tr":"Yinele",       "ru":"Повторить"},
     "Cut":               {"es":"Cortar",         "en":"Cut",           "de":"Ausschneiden",  "fr":"Couper",        "pt":"Recortar",      "ja":"切り取り",     "ko":"잘라내기",  "ca":"Retalla",      "it":"Taglia",       "tr":"Kes",          "ru":"Вырезать"},
@@ -62,7 +53,6 @@ _T: dict[str, dict[str, str]] = {
     "Go to line…":       {"es":"Ir a línea…",    "en":"Go to line…",   "de":"Zur Zeile…",    "fr":"Aller à la ligne…","pt":"Ir para linha…","ja":"行へ移動…",  "ko":"줄로 이동…","ca":"Ves a la línia…","it":"Vai alla riga…","tr":"Satıra git…","ru":"Перейти к строке…"},
     "Command palette":   {"es":"Paleta de comandos","en":"Command palette","de":"Befehlspalette","fr":"Palette de commandes","pt":"Paleta de comandos","ja":"コマンドパレット","ko":"명령 팔레트","ca":"Paleta d'ordres","it":"Tavolozza comandi","tr":"Komut paleti","ru":"Палитра команд"},
 
-    # ── FindReplaceBar ────────────────────────────────────────────────────
     "Find…":             {"es":"Buscar…",        "en":"Find…",         "de":"Suchen…",       "fr":"Chercher…",     "pt":"Buscar…",       "ja":"検索…",        "ko":"찾기…",     "ca":"Cerca…",       "it":"Trova…",       "tr":"Bul…",         "ru":"Найти…"},
     "Replace with…":     {"es":"Reemplazar por…","en":"Replace with…", "de":"Ersetzen durch…","fr":"Remplacer par…","pt":"Substituir por…","ja":"置換…",       "ko":"바꾸기…",   "ca":"Substitueix per…","it":"Sostituisci con…","tr":"Değiştir…","ru":"Заменить на…"},
     "Case sensitive":    {"es":"Mayúsculas",     "en":"Case sensitive","de":"Groß-/Kleinschr.","fr":"Casse exacte","pt":"Maiúsculas",     "ja":"大文字小文字",  "ko":"대소문자",  "ca":"Majúscules",   "it":"Maiuscole/minusc.","tr":"Büyük/küçük","ru":"Учёт регистра"},
@@ -70,7 +60,6 @@ _T: dict[str, dict[str, str]] = {
     "Replace":           {"es":"Reemplazar",     "en":"Replace",       "de":"Ersetzen",      "fr":"Remplacer",     "pt":"Substituir",    "ja":"置換",         "ko":"바꾸기",    "ca":"Substitueix",  "it":"Sostituisci",  "tr":"Değiştir",     "ru":"Заменить"},
     "All":               {"es":"Todo",           "en":"All",           "de":"Alle",          "fr":"Tout",          "pt":"Tudo",          "ja":"すべて",       "ko":"모두",      "ca":"Tot",          "it":"Tutto",        "tr":"Tümü",         "ru":"Все"},
 
-    # ── Ver ───────────────────────────────────────────────────────────────
     "File tree":         {"es":"Árbol de archivos","en":"File tree",  "de":"Dateibaum",     "fr":"Arborescence",  "pt":"Árvore de arquivos","ja":"ファイルツリー","ko":"파일 트리","ca":"Arbre de fitxers","it":"Albero file","tr":"Dosya ağacı","ru":"Дерево файлов"},
     "Terminal / Scratch Pad":{"es":"Terminal / Notas","en":"Terminal / Scratch Pad","de":"Terminal / Notizen","fr":"Terminal / Notes","pt":"Terminal / Notas","ja":"ターミナル・メモ","ko":"터미널/메모","ca":"Terminal / Notes","it":"Terminale / Note","tr":"Terminal / Notlar","ru":"Терминал / Заметки"},
     "Git":               {"es":"Git",            "en":"Git",           "de":"Git",           "fr":"Git",           "pt":"Git",           "ja":"Git",          "ko":"Git",       "ca":"Git",          "it":"Git",          "tr":"Git",          "ru":"Git"},
@@ -85,22 +74,18 @@ _T: dict[str, dict[str, str]] = {
     "Previous tab":      {"es":"Pestaña anterior","en":"Previous tab",  "de":"Vorheriger Tab","fr":"Onglet précédent","pt":"Aba anterior", "ja":"前のタブ",     "ko":"이전 탭",   "ca":"Pestanya anterior","it":"Scheda precedente","tr":"Önceki sekme","ru":"Предыдущая вкладка"},
     "Language":          {"es":"Idioma",         "en":"Language",       "de":"Sprache",       "fr":"Langue",        "pt":"Idioma",        "ja":"言語",         "ko":"언어",      "ca":"Idioma",       "it":"Lingua",       "tr":"Dil",          "ru":"Язык"},
 
-    # ── Ejecutar ──────────────────────────────────────────────────────────
     "Run file":          {"es":"Ejecutar archivo","en":"Run file",      "de":"Datei ausführen","fr":"Exécuter le fichier","pt":"Executar arquivo","ja":"ファイルを実行","ko":"파일 실행","ca":"Executa el fitxer","it":"Esegui file","tr":"Dosyayı çalıştır","ru":"Запустить файл"},
 
-    # ── Ayuda ─────────────────────────────────────────────────────────────
     "Keyboard shortcuts":{"es":"Atajos de Teclado","en":"Keyboard shortcuts","de":"Tastenkürzel","fr":"Raccourcis clavier","pt":"Atalhos de Teclado","ja":"キーボードショートカット","ko":"키보드 단축키","ca":"Dreceres de teclat","it":"Scorciatoie da tastiera","tr":"Klavye kısayolları","ru":"Горячие клавиши"},
     "About Suri Studio":       {"es":"Acerca de Suri Studio","en":"About Suri Studio",    "de":"Über Suri Studio",    "fr":"À propos de Suri Studio","pt":"Sobre o Suri Studio","ja":"Suri Studioについて","ko":"Suri Studio 정보","ca":"Quant a Suri Studio","it":"Informazioni su Suri Studio","tr":"Suri Studio hakkında","ru":"О Suri Studio"},
     "Custom snippets":   {"es":"Snippets personalizados","en":"Custom snippets","de":"Eigene Snippets","fr":"Extraits personnalisés","pt":"Snippets personalizados","ja":"カスタムスニペット","ko":"사용자 스니펫","ca":"Fragments personalitzats","it":"Snippet personalizzati","tr":"Özel parçacıklar","ru":"Пользовательские сниппеты"},
     "Color theme":       {"es":"Tema de color",  "en":"Color theme",   "de":"Farbthema",     "fr":"Thème de couleur","pt":"Tema de cor",   "ja":"カラーテーマ",  "ko":"색상 테마",  "ca":"Tema de color","it":"Tema colori","tr":"Renk teması","ru":"Цветовая тема"},
 
-    # ── Panel de Problemas ────────────────────────────────────────────────
     "PROBLEMS":          {"es":"PROBLEMAS",      "en":"PROBLEMS",      "de":"PROBLEME",      "fr":"PROBLÈMES",     "pt":"PROBLEMAS",     "ja":"問題",         "ko":"문제",      "ca":"PROBLEMES",    "it":"PROBLEMI",     "tr":"SORUNLAR",     "ru":"ПРОБЛЕМЫ"},
     "problems_none":     {"es":"sin problemas",  "en":"no problems",   "de":"keine Probleme","fr":"aucun problème", "pt":"sem problemas",  "ja":"問題なし",     "ko":"문제 없음", "ca":"sense problemes","it":"nessun problema","tr":"sorun yok","ru":"нет проблем"},
     "problems_count":    {"es":"{e} error(es), {w} aviso(s)","en":"{e} error(s), {w} warning(s)","de":"{e} Fehler, {w} Warnung(en)","fr":"{e} erreur(s), {w} avertissement(s)","pt":"{e} erro(s), {w} aviso(s)","ja":"{e}エラー, {w}警告","ko":"{e}오류, {w}경고","ca":"{e} error(s), {w} avís(os)","it":"{e} errore/i, {w} avviso/i","tr":"{e} hata, {w} uyarı","ru":"{e} ошибок, {w} предупреждений"},
     "Ln":                {"es":"Ln","en":"Ln","de":"Zl","fr":"Ln","pt":"Ln","ja":"行","ko":"줄","ca":"Ln","it":"Rl","tr":"St","ru":"Стр"},
 
-    # ── Buscar en Archivos ────────────────────────────────────────────────
     "SEARCH IN FILES":   {"es":"BUSCAR EN ARCHIVOS","en":"SEARCH IN FILES","de":"IN DATEIEN SUCHEN","fr":"CHERCHER DANS LES FICHIERS","pt":"BUSCAR NOS ARQUIVOS","ja":"ファイル内検索","ko":"파일에서 검색","ca":"CERCA EN FITXERS","it":"CERCA NEI FILE","tr":"DOSYALARDA ARA","ru":"ПОИСК В ФАЙЛАХ"},
     "Search in all files…":{"es":"Buscar en todos los archivos…","en":"Search in all files…","de":"In allen Dateien suchen…","fr":"Chercher dans tous les fichiers…","pt":"Buscar em todos os arquivos…","ja":"全ファイルを検索…","ko":"모든 파일 검색…","ca":"Cerca en tots els fitxers…","it":"Cerca in tutti i file…","tr":"Tüm dosyalarda ara…","ru":"Искать во всех файлах…"},
     "Search":            {"es":"Buscar",         "en":"Search",        "de":"Suchen",        "fr":"Chercher",      "pt":"Buscar",        "ja":"検索",         "ko":"검색",      "ca":"Cerca",        "it":"Cerca",        "tr":"Ara",          "ru":"Найти"},
@@ -109,19 +94,16 @@ _T: dict[str, dict[str, str]] = {
     "No results":        {"es":"Sin resultados", "en":"No results",    "de":"Keine Ergebnisse","fr":"Aucun résultat","pt":"Sem resultados","ja":"結果なし",     "ko":"결과 없음", "ca":"Cap resultat","it":"Nessun risultato","tr":"Sonuç yok","ru":"Результатов нет"},
     "results_summary":   {"es":"{n} coincidencia(s) en {f} archivo(s)","en":"{n} match(es) in {f} file(s)","de":"{n} Treffer in {f} Datei(en)","fr":"{n} résultat(s) dans {f} fichier(s)","pt":"{n} resultado(s) em {f} arquivo(s)","ja":"{f}ファイルに{n}件","ko":"{f}파일에서 {n}건","ca":"{n} coincidència/es en {f} fitxer(s)","it":"{n} corrispondenza/e in {f} file","tr":"{f} dosyada {n} eşleşme","ru":"{n} совпадений в {f} файлах"},
 
-    # ── Command Palette ───────────────────────────────────────────────────
     "Open file or run command…":{"es":"Abrir archivo o ejecutar comando…","en":"Open file or run command…","de":"Datei öffnen oder Befehl ausführen…","fr":"Ouvrir fichier ou exécuter commande…","pt":"Abrir arquivo ou executar comando…","ja":"ファイルを開くかコマンドを実行…","ko":"파일 열기 또는 명령 실행…","ca":"Obre fitxer o executa ordre…","it":"Apri file o esegui comando…","tr":"Dosya aç veya komut çalıştır…","ru":"Открыть файл или выполнить команду…"},
     "↑↓ navigate  Enter open  Esc close  > for commands":{"es":"↑↓ navegar   Enter abrir   Esc cerrar   > comandos","en":"↑↓ navigate  Enter open  Esc close  > commands","de":"↑↓ navigieren  Enter öffnen  Esc schließen  > Befehle","fr":"↑↓ naviguer  Entrée ouvrir  Échap fermer  > commandes","pt":"↑↓ navegar   Enter abrir   Esc fechar   > comandos","ja":"↑↓ 移動   Enter 開く   Esc 閉じる   > コマンド","ko":"↑↓ 이동  Enter 열기  Esc 닫기  > 명령","ca":"↑↓ navega   Enter obre   Esc tanca   > ordres","it":"↑↓ naviga  Invio apri  Esc chiudi  > comandi","tr":"↑↓ gezin  Enter aç  Esc kapat  > komutlar","ru":"↑↓ навигация  Enter открыть  Esc закрыть  > команды"},
     "No matching commands":{"es":"Sin comandos coincidentes","en":"No matching commands","de":"Keine passenden Befehle","fr":"Aucune commande correspondante","pt":"Sem comandos correspondentes","ja":"一致するコマンドなし","ko":"일치하는 명령 없음","ca":"Cap ordre coincident","it":"Nessun comando corrispondente","tr":"Eşleşen komut yok","ru":"Нет совпадающих команд"},
     "Indexing files…":   {"es":"Indexando archivos…","en":"Indexing files…","de":"Dateien indizieren…","fr":"Indexation des fichiers…","pt":"Indexando arquivos…","ja":"ファイルをインデックス中…","ko":"파일 인덱싱 중…","ca":"Indexant fitxers…","it":"Indicizzazione file…","tr":"Dosyalar indeksleniyor…","ru":"Индексирование файлов…"},
 
-    # ── Scratch Pad ───────────────────────────────────────────────────────
     "SCRATCH PAD":       {"es":"NOTAS","en":"SCRATCH PAD","de":"NOTIZEN","fr":"NOTES","pt":"NOTAS","ja":"メモ","ko":"메모","ca":"NOTES","it":"NOTE","tr":"NOTLAR","ru":"ЗАМЕТКИ"},
     "scratch_placeholder":{"es":"Apuntes, TODOs, snippets temporales…\nSe guarda automáticamente.","en":"Notes, TODOs, temporary snippets…\nAuto-saved.","de":"Notizen, TODOs, temporäre Snippets…\nAutomatisch gespeichert.","fr":"Notes, TODOs, extraits temporaires…\nSauvegardé automatiquement.","pt":"Notas, TODOs, snippets temporários…\nSalvo automaticamente.","ja":"メモ、TODO、一時スニペット…\n自動保存されます。","ko":"메모, 할 일, 임시 코드…\n자동 저장됩니다.","ca":"Apunts, TODOs, fragments temporals…\nEs desa automàticament.","it":"Note, TODO, snippet temporanei…\nSalvato automaticamente.","tr":"Notlar, TODO'lar, geçici parçacıklar…\nOtomatik kaydedilir.","ru":"Заметки, задачи, временные сниппеты…\nАвтосохранение включено."},
     "scratch_clear_tip": {"es":"Limpiar notas","en":"Clear scratch pad","de":"Notizen löschen","fr":"Effacer les notes","pt":"Limpar notas","ja":"メモをクリア","ko":"메모 지우기","ca":"Neteja les notes","it":"Cancella note","tr":"Notları temizle","ru":"Очистить заметки"},
     "scratch_saved":     {"es":"guardado","en":"saved","de":"gespeichert","fr":"enregistré","pt":"salvo","ja":"保存済み","ko":"저장됨","ca":"desat","it":"salvato","tr":"kaydedildi","ru":"сохранено"},
 
-    # ── Diálogos generales ────────────────────────────────────────────────
     "Explorer":          {"es":"Explorador","en":"Explorer","de":"Explorer","fr":"Explorateur","pt":"Explorador","ja":"エクスプローラー","ko":"탐색기","ca":"Explorador","it":"Esplora","tr":"Gezgin","ru":"Проводник"},
     "Open folder…":      {"es":"Abrir carpeta…","en":"Open folder…","de":"Ordner öffnen…","fr":"Ouvrir le dossier…","pt":"Abrir pasta…","ja":"フォルダを開く…","ko":"폴더 열기…","ca":"Obre carpeta…","it":"Apri cartella…","tr":"Klasör aç…","ru":"Открыть папку…"},
     "Untitled":          {"es":"Sin título","en":"Untitled","de":"Ohne Titel","fr":"Sans titre","pt":"Sem título","ja":"無題","ko":"제목 없음","ca":"Sense títol","it":"Senza titolo","tr":"Başlıksız","ru":"Без названия"},
@@ -136,13 +118,11 @@ _T: dict[str, dict[str, str]] = {
     "Restart required msg":{"es":"El cambio de idioma se aplicará al reiniciar Suri Studio.","en":"The language change will apply after restarting Suri Studio.","de":"Die Sprachänderung wird nach dem Neustart von Suri Studio übernommen.","fr":"Le changement de langue sera appliqué après le redémarrage de Suri Studio.","pt":"A mudança de idioma será aplicada ao reiniciar o Suri Studio.","ja":"言語の変更はSuri Studioの再起動後に反映されます。","ko":"언어 변경은 Suri Studio를 재시작한 후 적용됩니다.","ca":"El canvi d'idioma s'aplicarà en reiniciar Suri Studio.","it":"La modifica della lingua verrà applicata dopo il riavvio di Suri Studio.","tr":"Dil değişikliği Suri Studio yeniden başlatıldıktan sonra uygulanacak.","ru":"Смена языка вступит в силу после перезапуска Suri Studio."},
     "Col":               {"es":"Col","en":"Col","de":"Sp","fr":"Col","pt":"Col","ja":"列","ko":"열","ca":"Col","it":"Col","tr":"Stn","ru":"Стлб"},
 
-    # ── Acerca de ─────────────────────────────────────────────────────────
     "Developed by":      {"es":"Desarrollado por","en":"Developed by","de":"Entwickelt von","fr":"Développé par","pt":"Desenvolvido por","ja":"開発者","ko":"개발자","ca":"Desenvolupat per","it":"Sviluppato da","tr":"Geliştiren","ru":"Разработано"},
     "Copyright":         {"es":"Copyright","en":"Copyright","de":"Urheberrecht","fr":"Droits d'auteur","pt":"Copyright","ja":"著作権","ko":"저작권","ca":"Copyright","it":"Copyright","tr":"Telif hakkı","ru":"Авторское право"},
     "License":           {"es":"Licencia","en":"License","de":"Lizenz","fr":"Licence","pt":"Licença","ja":"ライセンス","ko":"라이선스","ca":"Llicència","it":"Licenza","tr":"Lisans","ru":"Лицензия"},
     "Website":           {"es":"Sitio web","en":"Website","de":"Webseite","fr":"Site web","pt":"Site","ja":"ウェブサイト","ko":"웹사이트","ca":"Lloc web","it":"Sito web","tr":"Web sitesi","ru":"Сайт"},
 
-    # ── Terminal ──────────────────────────────────────────────────────────
     "Kill process":      {"es":"Interrumpir proceso (Ctrl+C)","en":"Kill process (Ctrl+C)","de":"Prozess beenden (Ctrl+C)","fr":"Interrompre le processus (Ctrl+C)","pt":"Interromper processo (Ctrl+C)","ja":"プロセスを中断 (Ctrl+C)","ko":"프로세스 종료 (Ctrl+C)","ca":"Interromp el procés (Ctrl+C)","it":"Termina processo (Ctrl+C)","tr":"İşlemi kes (Ctrl+C)","ru":"Прервать процесс (Ctrl+C)"},
     "Clear terminal":    {"es":"Limpiar terminal","en":"Clear terminal","de":"Terminal leeren","fr":"Effacer le terminal","pt":"Limpar terminal","ja":"ターミナルをクリア","ko":"터미널 지우기","ca":"Neteja el terminal","it":"Cancella terminale","tr":"Terminali temizle","ru":"Очистить терминал"},
     "terminal_placeholder":{"es":"Escribe un comando… (Ctrl+C para interrumpir)","en":"Type a command… (Ctrl+C to interrupt)","de":"Befehl eingeben… (Ctrl+C zum Unterbrechen)","fr":"Tapez une commande… (Ctrl+C pour interrompre)","pt":"Digite um comando… (Ctrl+C para interromper)","ja":"コマンドを入力… (Ctrl+C で中断)","ko":"명령 입력… (Ctrl+C로 중단)","ca":"Escriu una ordre… (Ctrl+C per interrompre)","it":"Scrivi un comando… (Ctrl+C per interrompere)","tr":"Komut girin… (Ctrl+C ile durdur)","ru":"Введите команду… (Ctrl+C для прерывания)"},
@@ -159,7 +139,6 @@ _T: dict[str, dict[str, str]] = {
     "err_unknown":       {"es":"Error desconocido","en":"Unknown error","de":"Unbekannter Fehler","fr":"Erreur inconnue","pt":"Erro desconhecido","ja":"不明なエラー","ko":"알 수 없는 오류","ca":"Error desconegut","it":"Errore sconosciuto","tr":"Bilinmeyen hata","ru":"Неизвестная ошибка"},
     "stdin_echo":        {"es":"→ {text}","en":"→ {text}","de":"→ {text}","fr":"→ {text}","pt":"→ {text}","ja":"→ {text}","ko":"→ {text}","ca":"→ {text}","it":"→ {text}","tr":"→ {text}","ru":"→ {text}"},
 
-    # ── About dialog dinámico ─────────────────────────────────────────────
     "app_subtitle":      {"es":"Editor de código · v1.0.0-beta","en":"Code editor · v1.0.0-beta","de":"Code-Editor · v1.0.0-beta","fr":"Éditeur de code · v1.0.0-beta","pt":"Editor de código · v1.0.0-beta","ja":"コードエディタ · v1.0.0-beta","ko":"코드 편집기 · v1.0.0-beta","ca":"Editor de codi · v1.0.0-beta","it":"Editor di codice · v1.0.0-beta","tr":"Kod editörü · v1.0.0-beta","ru":"Редактор кода · v1.0.0-beta"},
     "app_framework":     {"es":"Framework: PySide6  ·  Tema: {theme}","en":"Framework: PySide6  ·  Theme: {theme}","de":"Framework: PySide6  ·  Thema: {theme}","fr":"Framework: PySide6  ·  Thème: {theme}","pt":"Framework: PySide6  ·  Tema: {theme}","ja":"フレームワーク: PySide6  ·  テーマ: {theme}","ko":"프레임워크: PySide6  ·  테마: {theme}","ca":"Framework: PySide6  ·  Tema: {theme}","it":"Framework: PySide6  ·  Tema: {theme}","tr":"Framework: PySide6  ·  Tema: {theme}","ru":"Фреймворк: PySide6  ·  Тема: {theme}"},
     "Theme changed":     {"es":"Tema cambiado","en":"Theme changed","de":"Thema geändert","fr":"Thème modifié","pt":"Tema alterado","ja":"テーマ変更","ko":"테마 변경됨","ca":"Tema canviat","it":"Tema modificato","tr":"Tema değiştirildi","ru":"Тема изменена"},
@@ -172,7 +151,6 @@ _T: dict[str, dict[str, str]] = {
     "linter_missing_msg":{"es":"Para subrayar errores en {lang} se necesita «{tool}»,\nque no está instalado.\n\nComando de instalación:\n  {cmd}\n\n¿Abrir la terminal para instalarlo ahora?","en":"To highlight errors in {lang}, «{tool}» is needed\nbut not installed.\n\nInstall command:\n  {cmd}\n\nOpen terminal to install it now?","de":"Um Fehler in {lang} anzuzeigen, wird «{tool}» benötigt,\nist aber nicht installiert.\n\nInstallationsbefehl:\n  {cmd}\n\nTerminal öffnen und jetzt installieren?","fr":"Pour mettre en évidence les erreurs dans {lang}, «{tool}» est nécessaire\nmais n'est pas installé.\n\nCommande d'installation:\n  {cmd}\n\nOuvrir le terminal pour l'installer maintenant?","pt":"Para sublinhar erros em {lang}, «{tool}» é necessário\nmas não está instalado.\n\nComando de instalação:\n  {cmd}\n\nAbrir terminal para instalar agora?","ja":"{lang} のエラーを表示するには「{tool}」が必要ですが、\nインストールされていません。\n\nインストールコマンド:\n  {cmd}\n\n今すぐターミナルを開いてインストールしますか？","ko":"{lang}의 오류를 표시하려면 «{tool}»이 필요하지만\n설치되어 있지 않습니다.\n\n설치 명령:\n  {cmd}\n\n지금 터미널을 열어 설치하시겠습니까?","ca":"Per subratllar errors en {lang} cal «{tool}»,\nque no està instal·lat.\n\nComanda d'instal·lació:\n  {cmd}\n\nVoleu obrir el terminal per instal·lar-lo ara?","it":"Per evidenziare gli errori in {lang}, «{tool}» è necessario\nma non è installato.\n\nComando di installazione:\n  {cmd}\n\nAprire il terminale per installarlo ora?","tr":"{lang} içinde hataları vurgulamak için «{tool}» gerekli\nancak kurulu değil.\n\nKurulum komutu:\n  {cmd}\n\nŞimdi kurmak için terminal açılsın mı?","ru":"Для подсветки ошибок в {lang} нужен «{tool}»,\nно он не установлен.\n\nКоманда установки:\n  {cmd}\n\nОткрыть терминал для установки?"},
     "Install linter hint":{"es":"# Instala {tool} con:","en":"# Install {tool} with:","de":"# {tool} installieren mit:","fr":"# Installer {tool} avec:","pt":"# Instale {tool} com:","ja":"# {tool} をインストールするには:","ko":"# {tool} 설치 방법:","ca":"# Instal·la {tool} amb:","it":"# Installa {tool} con:","tr":"# {tool} kurulumu için:","ru":"# Установить {tool} командой:"},
 
-    # ── Snippets ──────────────────────────────────────────────────────────
     "Custom snippets title":{"es":"Snippets personalizados","en":"Custom snippets","de":"Eigene Snippets","fr":"Extraits personnalisés","pt":"Snippets personalizados","ja":"カスタムスニペット","ko":"사용자 스니펫","ca":"Fragments personalitzats","it":"Snippet personalizzati","tr":"Özel parçacıklar","ru":"Пользовательские сниппеты"},
     "Snippets":          {"es":"Snippets","en":"Snippets","de":"Snippets","fr":"Extraits","pt":"Snippets","ja":"スニペット","ko":"스니펫","ca":"Fragments","it":"Snippet","tr":"Parçacıklar","ru":"Сниппеты"},
     "snippet_prefix":    {"es":"Prefijo (disparador):","en":"Prefix (trigger):","de":"Präfix (Auslöser):","fr":"Préfixe (déclencheur):","pt":"Prefixo (gatilho):","ja":"プレフィックス（トリガー）:","ko":"접두사 (트리거):","ca":"Prefix (disparador):","it":"Prefisso (trigger):","tr":"Önek (tetikleyici):","ru":"Префикс (триггер):"},
@@ -185,7 +163,6 @@ _T: dict[str, dict[str, str]] = {
     "Delete snippet":    {"es":"✕ Borrar","en":"✕ Delete","de":"✕ Löschen","fr":"✕ Supprimer","pt":"✕ Excluir","ja":"✕ 削除","ko":"✕ 삭제","ca":"✕ Elimina","it":"✕ Elimina","tr":"✕ Sil","ru":"✕ Удалить"},
     "Delete snippet confirm":{"es":"¿Borrar el snippet «{name}»?","en":"Delete snippet «{name}»?","de":"Snippet «{name}» löschen?","fr":"Supprimer l'extrait «{name}»?","pt":"Excluir o snippet «{name}»?","ja":"スニペット「{name}」を削除しますか？","ko":"스니펫 «{name}»을 삭제하시겠습니까?","ca":"Voleu eliminar el fragment «{name}»?","it":"Eliminare lo snippet «{name}»?","tr":"«{name}» parçacığı silinsin mi?","ru":"Удалить сниппет «{name}»?"},
 
-    # ── Panel Git ─────────────────────────────────────────────────────────
     "GIT":               {"es":"GIT","en":"GIT","de":"GIT","fr":"GIT","pt":"GIT","ja":"GIT","ko":"GIT","ca":"GIT","it":"GIT","tr":"GIT","ru":"GIT"},
     "No repo":           {"es":"Sin repositorio git","en":"No git repository","de":"Kein Git-Repository","fr":"Pas de dépôt git","pt":"Sem repositório git","ja":"Gitリポジトリなし","ko":"Git 저장소 없음","ca":"Sense repositori git","it":"Nessun repository git","tr":"Git deposu yok","ru":"Нет git-репозитория"},
     "No changes":        {"es":"Sin cambios","en":"No changes","de":"Keine Änderungen","fr":"Aucune modification","pt":"Sem alterações","ja":"変更なし","ko":"변경 없음","ca":"Sense canvis","it":"Nessuna modifica","tr":"Değişiklik yok","ru":"Нет изменений"},
@@ -213,7 +190,6 @@ _T: dict[str, dict[str, str]] = {
     "git_diff_truncated":{"es":"  … diff truncado a 300 líneas","en":"  … diff truncated to 300 lines","de":"  … Diff auf 300 Zeilen gekürzt","fr":"  … diff tronqué à 300 lignes","pt":"  … diff truncado em 300 linhas","ja":"  … diff を300行に切り詰めました","ko":"  … diff 300줄로 잘림","ca":"  … diff truncat a 300 línies","it":"  … diff troncato a 300 righe","tr":"  … diff 300 satıra kısaltıldı","ru":"  … diff обрезан до 300 строк"},
     "git_n_changes":     {"es":"{n} archivo(s) con cambios","en":"{n} file(s) with changes","de":"{n} Datei(en) mit Änderungen","fr":"{n} fichier(s) avec des modifications","pt":"{n} arquivo(s) com alterações","ja":"{n}ファイルに変更あり","ko":"{n}개 파일 변경됨","ca":"{n} fitxer(s) amb canvis","it":"{n} file con modifiche","tr":"{n} dosyada değişiklik","ru":"{n} файл(ов) с изменениями"},
 
-    # ── Comandos palette ──────────────────────────────────────────────────
     "cmd_new_file":      {"es":"Nuevo archivo","en":"New file","de":"Neue Datei","fr":"Nouveau fichier","pt":"Novo arquivo","ja":"新規ファイル","ko":"새 파일","ca":"Fitxer nou","it":"Nuovo file","tr":"Yeni dosya","ru":"Новый файл"},
     "cmd_open_file":     {"es":"Abrir archivo","en":"Open file","de":"Datei öffnen","fr":"Ouvrir fichier","pt":"Abrir arquivo","ja":"ファイルを開く","ko":"파일 열기","ca":"Obre fitxer","it":"Apri file","tr":"Dosya aç","ru":"Открыть файл"},
     "cmd_save":          {"es":"Guardar","en":"Save","de":"Speichern","fr":"Enregistrer","pt":"Salvar","ja":"保存","ko":"저장","ca":"Desa","it":"Salva","tr":"Kaydet","ru":"Сохранить"},
@@ -240,7 +216,6 @@ _T: dict[str, dict[str, str]] = {
     "Navigate back":       {"es":"Posición anterior",    "en":"Navigate back",        "de":"Zurück navigieren",  "fr":"Naviguer en arrière", "pt":"Posição anterior",    "ja":"戻る",               "ko":"뒤로 이동",     "ca":"Enrere",              "it":"Naviga indietro",     "tr":"Geri git",            "ru":"Назад по истории"},
     "Navigate forward":    {"es":"Posición siguiente",   "en":"Navigate forward",     "de":"Vorwärts navigieren","fr":"Naviguer en avant",   "pt":"Posição seguinte",    "ja":"進む",               "ko":"앞으로 이동",   "ca":"Endavant",            "it":"Naviga avanti",       "tr":"İleri git",           "ru":"Вперёд по истории"},
 
-    # ── Recuperación de sesión ────────────────────────────────────────────
     "Recover session":      {"es":"Recuperar sesión","en":"Recover session","de":"Sitzung wiederherstellen","fr":"Récupérer la session","pt":"Recuperar sessão","ja":"セッションを復元","ko":"세션 복구","ca":"Recupera la sessió","it":"Recupera sessione","tr":"Oturumu kurtar","ru":"Восстановить сеанс"},
     "recover_msg":          {"es":"Suri Studio se cerró inesperadamente con {n} archivo(s) sin guardar:\n\n{files}\n\n¿Recuperar estos archivos?",
                              "en":"Suri Studio closed unexpectedly with {n} unsaved file(s):\n\n{files}\n\nRecover these files?",
@@ -257,12 +232,7 @@ _T: dict[str, dict[str, str]] = {
     "session_recovered_msg":{"es":"{n} archivo(s) recuperado(s). Recuerda guardarlos.","en":"{n} file(s) recovered. Remember to save them.","de":"{n} Datei(en) wiederhergestellt. Bitte speichern.","fr":"{n} fichier(s) récupéré(s). Pensez à les enregistrer.","pt":"{n} arquivo(s) recuperado(s). Lembre-se de salvá-los.","ja":"{n}個のファイルを復元しました。保存を忘れずに。","ko":"{n}개 파일이 복구되었습니다. 저장하는 것을 잊지 마세요.","ca":"{n} fitxer(s) recuperat(s). Recorda desar-los.","it":"{n} file recuperato/i. Ricordati di salvarli.","tr":"{n} dosya kurtarıldı. Kaydetmeyi unutmayın.","ru":"{n} файл(ов) восстановлено. Не забудьте сохранить."},
 }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  API pública
-# ─────────────────────────────────────────────────────────────────────────────
 _current_lang: str = "en"
-
 
 def _detect_system_language() -> str:
     try:
@@ -292,17 +262,14 @@ def _detect_system_language() -> str:
         pass
     return "en"
 
-
 def set_language(code: str) -> None:
     global _current_lang
     if code in LANGUAGES:
         _current_lang = code
         QSettings(ORG, APP).setValue("ui/language", code)
 
-
 def get_language() -> str:
     return _current_lang
-
 
 def load_language() -> None:
     global _current_lang
@@ -314,7 +281,6 @@ def load_language() -> None:
         detected = _detect_system_language()
         _current_lang = detected
         s.setValue("ui/language", detected)
-
 
 def tr(key: str) -> str:
     entry = _T.get(key)

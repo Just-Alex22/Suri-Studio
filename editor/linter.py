@@ -1,17 +1,3 @@
-# editor/linter.py — Subrayado de errores en tiempo real
-#
-# Lenguajes y herramientas:
-#   Python     → ruff (preferido) o pyflakes
-#   JavaScript → eslint (si disponible)
-#   TypeScript → eslint con @typescript-eslint
-#   Bash       → shellcheck
-#   Ruby       → rubocop
-#   CSS/SCSS   → stylelint (si disponible)
-#
-# Todas las herramientas son opcionales — si no están instaladas, ese
-# lenguaje simplemente no tiene linting (no hay errores, no hay crashes).
-# Corre en QThread para no bloquear la UI.
-# Emite Signal con lista de (line_0based, col, msg, severity).
 
 from __future__ import annotations
 import re
@@ -25,12 +11,8 @@ from PySide6.QtCore    import QThread, Signal, QTimer, QObject
 from PySide6.QtGui     import QTextCharFormat, QColor, QTextCursor
 from PySide6.QtWidgets import QTextEdit
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Worker — corre el linter en un hilo
-# ─────────────────────────────────────────────────────────────────────────────
 class LintWorker(QThread):
-    results_ready = Signal(list)   # [(line_0, col, msg, severity), ...]
+    results_ready = Signal(list)
 
     def __init__(self, code: str, lang: str, filepath: str = ""):
         super().__init__()
@@ -45,7 +27,6 @@ class LintWorker(QThread):
             results = []
         self.results_ready.emit(results)
 
-
 def _dispatch(code: str, lang: str, filepath: str) -> list:
     if lang == 'python':
         return _python(code, filepath)
@@ -59,12 +40,9 @@ def _dispatch(code: str, lang: str, filepath: str) -> list:
         return _css(code, lang, filepath)
     return []
 
-
-# ── Python ────────────────────────────────────────────────────────────────────
 def _python(code: str, filepath: str) -> list:
     result = _ruff(code) or _pyflakes(code)
     return result
-
 
 def _ruff(code: str) -> list | None:
     if not shutil.which('ruff'):
@@ -81,7 +59,6 @@ def _ruff(code: str) -> list | None:
             results.append((ln, col, f"{code_id}: {msg}", sev))
     return results or None
 
-
 def _pyflakes(code: str) -> list:
     if not shutil.which('pyflakes'):
         return []
@@ -96,13 +73,11 @@ def _pyflakes(code: str) -> list:
             results.append((ln, col, m.group(3), 'error'))
     return results
 
-
-# ── JavaScript / TypeScript ───────────────────────────────────────────────────
 def _js(code: str, lang: str, filepath: str) -> list:
     if not shutil.which('eslint'):
         return []
     ext = '.ts' if lang == 'typescript' else '.js'
-    # Usar el filepath real si existe (para que eslint encuentre la config)
+
     if filepath and Path(filepath).exists():
         src = filepath
         use_tmp = False
@@ -132,8 +107,6 @@ def _js(code: str, lang: str, filepath: str) -> list:
         pass
     return results
 
-
-# ── Bash ──────────────────────────────────────────────────────────────────────
 def _bash(code: str, filepath: str) -> list:
     if not shutil.which('shellcheck'):
         return []
@@ -154,8 +127,6 @@ def _bash(code: str, filepath: str) -> list:
         pass
     return results
 
-
-# ── Ruby ──────────────────────────────────────────────────────────────────────
 def _ruby(code: str, filepath: str) -> list:
     if not shutil.which('rubocop'):
         return []
@@ -178,8 +149,6 @@ def _ruby(code: str, filepath: str) -> list:
         pass
     return results
 
-
-# ── CSS / SCSS ────────────────────────────────────────────────────────────────
 def _css(code: str, lang: str, filepath: str) -> list:
     if not shutil.which('stylelint'):
         return []
@@ -200,10 +169,8 @@ def _css(code: str, lang: str, filepath: str) -> list:
         pass
     return results
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 class _tmp:
-    """Context manager para archivo temporal."""
+
     def __init__(self, suffix: str, content: str):
         self._suffix  = suffix
         self._content = content
@@ -224,7 +191,6 @@ class _tmp:
         if self._path:
             Path(self._path).unlink(missing_ok=True)
 
-
 def _run(cmd: list[str]) -> str:
     try:
         r = subprocess.run(
@@ -234,19 +200,11 @@ def _run(cmd: list[str]) -> str:
     except Exception:
         return ""
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  LintManager — conecta el editor con el worker
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Lenguajes con linting disponible
 _LINTABLE = {'python', 'javascript', 'typescript', 'bash', 'ruby', 'css', 'scss'}
 
-
 class LintManager(QObject):
-    """Asocia un CodeEditor con el sistema de linting."""
 
-    errors_updated = Signal(list)   # [(ln, col, msg, sev), ...]
+    errors_updated = Signal(list)
     DELAY_MS = 900
 
     _FMT_ERROR:   QTextCharFormat | None = None

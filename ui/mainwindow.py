@@ -1,4 +1,3 @@
-# ui/mainwindow.py — Ventana principal de Sonia
 
 import os
 from pathlib import Path
@@ -33,55 +32,31 @@ from ui.palette     import CommandPalette
 from ui.git_panel   import GitPanel
 from ui.symbols_panel import SymbolsPanel
 
-
 def _assets_dir() -> Path:
     return Path(__file__).parent.parent / "assets"
 
-
 def _needs_embedded_menubar() -> bool:
-    """
-    Devuelve True solo cuando el entorno Wayland activo NO implementa
-    el protocolo de Global Menu (AppMenu) de KDE Plasma.
 
-    Reglas:
-      - macOS       → False  (el menú nativo en la barra superior es la UX esperada)
-      - Windows     → False  (no hay global menu, Qt ya lo embebe por defecto)
-      - KDE Plasma  → False  (implementa org.kde.plasma.window-management correctamente)
-      - GNOME       → False  (usa su propio mecanismo; Qt no activa AppMenu en GNOME)
-      - LabWC, sway, river, Hyprland sin KDE, etc. → True
-      - X11 sin DE conocido → False (en X11 el menú embebido ya es el default)
-    """
     import sys, os
 
     if sys.platform in ("darwin", "win32"):
         return False
 
-    # Solo aplicar en Wayland
     session_type = os.environ.get("XDG_SESSION_TYPE", "").lower()
     if session_type != "wayland":
         return False
 
-    # DEs que gestionan el Global Menu correctamente
     current_desktop = os.environ.get("XDG_CURRENT_DESKTOP", "").upper()
     safe_desktops   = {"KDE", "GNOME", "UNITY", "PANTHEON", "DEEPIN"}
     for safe in safe_desktops:
         if safe in current_desktop:
             return False
 
-    # También respetar si el usuario forzó el tema Qt explícitamente
-    # (asumimos que sabe lo que hace)
     if os.environ.get("QT_QPA_PLATFORMTHEME", ""):
         return False
 
-    # En cualquier otro Wayland (LabWC, sway, river, Hyprland puro…)
-    # forzar el menú embebido
     return True
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-#  Panel derecho: Terminal + Scratch Pad
-# ─────────────────────────────────────────────────────────────────────────────
 class RightPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -103,10 +78,6 @@ class RightPanel(QWidget):
     def save_scratch(self) -> None:
         self.scratchpad.save_now()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Diálogo Acerca de
-# ─────────────────────────────────────────────────────────────────────────────
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -114,7 +85,6 @@ class AboutDialog(QDialog):
         self.setFixedSize(480, 340)
         self.setSizeGripEnabled(False)
 
-        # ── Imagen de fondo ───────────────────────────────────────────────
         bg_path = _assets_dir() / "about_background.jpg"
         if bg_path.exists():
             pix = QPixmap(str(bg_path)).scaled(
@@ -126,7 +96,7 @@ class AboutDialog(QDialog):
             pal.setBrush(self.backgroundRole(), pix)
             self.setPalette(pal)
             self.setAutoFillBackground(True)
-            # Overlay semitransparente para legibilidad
+
             overlay_style = "background: rgba(20,20,20,0.72); color: #d4d4d4;"
         else:
             self.setStyleSheet(f"background:{VSCode.BG_LIGHT}; color:{VSCode.FG};")
@@ -136,14 +106,12 @@ class AboutDialog(QDialog):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Contenedor con overlay
         container = QWidget()
         container.setStyleSheet(overlay_style)
         c_lay = QVBoxLayout(container)
         c_lay.setContentsMargins(28, 24, 28, 18)
         c_lay.setSpacing(10)
 
-        # ── Logo + nombre ─────────────────────────────────────────────────
         top = QHBoxLayout(); top.setSpacing(20)
         logo_path = _assets_dir() / "logo.svg"
         if logo_path.exists():
@@ -187,7 +155,6 @@ class AboutDialog(QDialog):
         sep.setStyleSheet("background: rgba(255,255,255,0.20);")
         c_lay.addWidget(sep)
 
-        # ── Info ──────────────────────────────────────────────────────────
         grid = QVBoxLayout(); grid.setSpacing(5)
         for lbl_t, val_t, url in [
             (tr("Developed by"),  "CuerdOS Dev Team",  None),
@@ -215,7 +182,7 @@ class AboutDialog(QDialog):
 
         bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         bb.accepted.connect(self.accept)
-        # Estilo del botón Ok sobre fondo oscuro
+
         bb.setStyleSheet(
             "QPushButton { background: rgba(255,255,255,0.12); color: #ffffff;"
             " border: 1px solid rgba(255,255,255,0.25); border-radius:3px; padding:4px 16px; }"
@@ -235,10 +202,6 @@ class AboutDialog(QDialog):
         ph.setAlignment(Qt.AlignmentFlag.AlignCenter)
         top.addWidget(ph)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Diálogo Atajos
-# ─────────────────────────────────────────────────────────────────────────────
 class ShortcutsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -343,22 +306,12 @@ class ShortcutsDialog(QDialog):
         bb.setContentsMargins(12, 0, 12, 0)
         outer.addWidget(bb, alignment=Qt.AlignmentFlag.AlignRight)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Ventana principal
-# ─────────────────────────────────────────────────────────────────────────────
 class SoniaMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        load_language()   # debe ser lo primero
-        load_theme()      # cargar tema guardado
+        load_language()
+        load_theme()
 
-        # Desactivar el Global Menu / AppMenu solo en entornos Wayland que
-        # no implementan el protocolo org.kde.plasma.window-management.
-        # En KDE Plasma (XDG_CURRENT_DESKTOP=KDE) y en macOS el menú
-        # nativo funciona correctamente — no tocarlo.
-        # En LabWC, sway, river y similares Qt intenta exportar el menú
-        # a un espacio que no existe, produciendo texto recortado o invisible.
         _disable_native_menu = _needs_embedded_menubar()
         if _disable_native_menu:
             try:
@@ -374,7 +327,6 @@ class SoniaMainWindow(QMainWindow):
         self._tab_counter = 0
         self._repo_path:  str | None = None
 
-        # Drag & drop de archivos desde el gestor de archivos del sistema
         self.setAcceptDrops(True)
         self._set_window_icon()
         self._build_menu()
@@ -389,15 +341,12 @@ class SoniaMainWindow(QMainWindow):
 
         self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
-        # Autosave
         self._autosave = AutosaveManager(self, parent=self)
 
-        # Command Palette — instancia única, se abre bajo demanda
         self._palette = CommandPalette(self)
         self._palette.open_file.connect(self.open_file)
         self._register_palette_commands()
 
-        # Restaurar estado guardado
         restore_window(self)
         sizes = self.main_splitter.sizes()
         if sizes:
@@ -458,16 +407,13 @@ class SoniaMainWindow(QMainWindow):
         except Exception:
             pass
 
-    # ── Helpers ───────────────────────────────────────────────────────────
     def _si(self, px):
         return self.style().standardIcon(px)
 
-    # ── Menú ──────────────────────────────────────────────────────────────
     def _build_menu(self):
         mb = self.menuBar()
         sp = QStyle.StandardPixmap
 
-        # Archivo
         m = mb.addMenu(tr("File"))
         self._act(m, tr("New"),          "Ctrl+N",       self.new_file)
         self._act(m, tr("Open…"),        "Ctrl+O",       self.open_file)
@@ -480,7 +426,6 @@ class SoniaMainWindow(QMainWindow):
         m.addSeparator()
         self._act(m, tr("Quit"),         "Ctrl+Q",       self.close)
 
-        # Editar
         m = mb.addMenu(tr("Edit"))
         self._act(m, tr("Undo"),         "Ctrl+Z",
                   lambda: self._cur_editor() and self._cur_editor().undo())
@@ -512,7 +457,6 @@ class SoniaMainWindow(QMainWindow):
         self._act(m, tr("Go to line…"),     "Ctrl+G",       self._go_to_line_cur)
         self._act(m, tr("Command palette"), "Ctrl+P",       self._open_palette)
 
-        # Ver
         m = mb.addMenu(tr("View"))
         self._act(m, tr("File tree"),           "Ctrl+B",       self.toggle_file_tree)
         self._act(m, tr("Terminal / Scratch Pad"),"Ctrl+`",     self.toggle_right_panel)
@@ -540,7 +484,6 @@ class SoniaMainWindow(QMainWindow):
         for i in range(1, 6):
             self._act(m, tr("Tab N").format(n=i), f"Ctrl+{i}", lambda _, n=i-1: self._go_tab(n))
 
-        # Ejecutar
         m = mb.addMenu(tr("Run"))
         self._act(m, tr("Run file"),          "F5",         self._run_current)
         self._act(m, tr("Build only"),         "F6",         self._build_only)
@@ -553,14 +496,13 @@ class SoniaMainWindow(QMainWindow):
         self._act(m, tr("Navigate back"),      "Alt+Left",   self._navigate_back)
         self._act(m, tr("Navigate forward"),   "Alt+Right",  self._navigate_forward)
 
-        # Ayuda
         m = mb.addMenu(tr("Help"))
         self._act(m, tr("Keyboard shortcuts"), "Ctrl+?", self._shortcuts)
         m.addSeparator()
-        # Snippets personalizados
+
         self._act(m, tr("Custom snippets"), "Ctrl+Shift+P", self._open_snippets)
         m.addSeparator()
-        # Selector de tema
+
         theme_menu = m.addMenu(tr("Color theme"))
         cur_theme  = get_theme()
         for code, name in THEMES.items():
@@ -570,7 +512,7 @@ class SoniaMainWindow(QMainWindow):
             a.setChecked(code == cur_theme)
             a.triggered.connect(self._change_theme)
             theme_menu.addAction(a)
-        # Selector de idioma
+
         lang_menu = m.addMenu(tr("Language"))
         cur_lang  = get_language()
         for code, name in LANGUAGES.items():
@@ -593,7 +535,6 @@ class SoniaMainWindow(QMainWindow):
         menu.addAction(a)
         return a
 
-    # ── Toolbar ───────────────────────────────────────────────────────────
     def _build_toolbar(self):
         tb = self.addToolBar("Principal")
         tb.setMovable(False)
@@ -624,7 +565,6 @@ class SoniaMainWindow(QMainWindow):
                 a.triggered.connect(slot)
                 tb.addAction(a)
 
-    # ── Layout central ────────────────────────────────────────────────────
     def _build_central(self):
         central = QWidget()
         self.setCentralWidget(central)
@@ -637,7 +577,6 @@ class SoniaMainWindow(QMainWindow):
         main_lay.setContentsMargins(0, 0, 0, 0)
         main_lay.setSpacing(0)
 
-        # Barra lateral de iconos
         self.icon_bar = QWidget()
         self.icon_bar.setFixedWidth(40)
         self.icon_bar.setStyleSheet(
@@ -648,7 +587,6 @@ class SoniaMainWindow(QMainWindow):
         icon_lay.setSpacing(2)
         sp = QStyle.StandardPixmap
 
-        # Grupo 1: paneles de vista
         self.btn_tree     = self._icon_btn(self._si(sp.SP_DirIcon),
                                            f"{tr('File tree')} (Ctrl+B)",
                                            self.toggle_file_tree)
@@ -676,17 +614,14 @@ class SoniaMainWindow(QMainWindow):
         icon_lay.addStretch()
         main_lay.addWidget(self.icon_bar)
 
-        # Splitter principal: left_panel | tabs | right_panel
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_lay.addWidget(self.main_splitter, 1)
 
-        # ── Panel izquierdo: árbol + git en splitter vertical ─────────────
         self._left_splitter = QSplitter(Qt.Orientation.Vertical)
         self._left_splitter.setHandleWidth(1)
         self._left_splitter.setMinimumWidth(180)
         self._left_splitter.setMaximumWidth(340)
 
-        # Árbol de archivos
         self.file_tree_panel = QWidget()
         tree_lay = QVBoxLayout(self.file_tree_panel)
         tree_lay.setContentsMargins(0, 0, 0, 0)
@@ -725,7 +660,6 @@ class SoniaMainWindow(QMainWindow):
         tree_lay.addWidget(btn_folder)
         tree_lay.addWidget(self.tree_view, 1)
 
-        # Panel Git y Símbolos — comparten el splitter vertical con el árbol
         self.git_panel     = GitPanel()
         self.symbols_panel = SymbolsPanel()
         self.symbols_panel.goto_line.connect(self._goto_symbol_line)
@@ -739,14 +673,12 @@ class SoniaMainWindow(QMainWindow):
         self.symbols_panel.hide()
         self.main_splitter.addWidget(self._left_splitter)
 
-        # Tabs — QTabBar estándar (el indicador de cambios va en el editor)
         self.tab_widget = QTabWidget()
         self.tab_widget.setTabsClosable(True)
         self.tab_widget.setMovable(True)
         self.tab_widget.tabCloseRequested.connect(self.close_tab)
         self.main_splitter.addWidget(self.tab_widget)
 
-        # Panel derecho (Terminal + ScratchPad)
         self.right_panel = RightPanel()
         self.right_panel.setMinimumWidth(260)
         self.right_panel.setMaximumWidth(640)
@@ -760,7 +692,6 @@ class SoniaMainWindow(QMainWindow):
 
         outer.addWidget(h_area, 1)
 
-        # Panel inferior
         self.bottom_panel = BottomPanel()
         self.bottom_panel.setVisible(False)
         self.bottom_panel.goto_line.connect(self._goto_problem_line)
@@ -780,7 +711,6 @@ class SoniaMainWindow(QMainWindow):
         btn.clicked.connect(slot)
         return btn
 
-    # ── StatusBar ─────────────────────────────────────────────────────────
     def _build_statusbar(self):
         sb = self.statusBar()
         sb.setSizeGripEnabled(False)
@@ -792,7 +722,6 @@ class SoniaMainWindow(QMainWindow):
         for lbl in [self.lbl_lang, self.lbl_pos, self.lbl_enc]:
             sb.addPermanentWidget(lbl)
 
-    # ── Archivo ───────────────────────────────────────────────────────────
     def new_file(self):
         dlg = NewFileDialog(suggested_lang='text', parent=self)
         if dlg.exec() == NewFileDialog.DialogCode.Rejected:
@@ -806,7 +735,7 @@ class SoniaMainWindow(QMainWindow):
         self._offer_linter_install(lang)
 
     def _offer_linter_install(self, lang: str) -> None:
-        """Si el lenguaje tiene linter asociado y no está instalado, ofrecer instalarlo."""
+
         import shutil
         linter_info = {
             'python':     ('ruff',       'pip install ruff'),
@@ -821,7 +750,7 @@ class SoniaMainWindow(QMainWindow):
             return
         tool, install_cmd = linter_info[lang]
         if shutil.which(tool):
-            return   # ya está instalado
+            return
         r = QMessageBox.question(
             self,
             tr("linter_missing_title").format(lang=lang),
@@ -845,7 +774,7 @@ class SoniaMainWindow(QMainWindow):
         tab = SplitEditorContainer(filepath=filepath, initial_lang=initial_lang)
         tab.editor.cursorPositionChanged.connect(self._update_cursor_pos)
         tab.modified_changed.connect(lambda _: self._on_tab_modified(tab))
-        # Conectar linter al panel de problemas (solo si el lenguaje tiene soporte)
+
         if tab.primary._lint_mgr is not None:
             tab.primary._lint_mgr.errors_updated.connect(
                 lambda errs, t=tab: self._on_lint_results(t, errs)
@@ -870,7 +799,7 @@ class SoniaMainWindow(QMainWindow):
         self._create_tab(filepath=path)
         add_recent(path)
         self._refresh_recent_menu()
-        # Auto-detectar repo git desde la carpeta del archivo
+
         self._update_repo(str(Path(path).parent))
         if not self._palette._folder:
             self._palette.set_folder(str(Path(path).parent))
@@ -898,7 +827,7 @@ class SoniaMainWindow(QMainWindow):
     def close_tab(self, index: int):
         tab = self.tab_widget.widget(index)
         if isinstance(tab, SplitEditorContainer):
-            # Guardar posición del cursor antes de cerrar
+
             tab.primary.save_cursor()
             if tab.is_modified():
                 name = Path(tab.filepath).name if tab.filepath else tr("Untitled")
@@ -921,7 +850,6 @@ class SoniaMainWindow(QMainWindow):
         idx = self.tab_widget.currentIndex()
         if idx >= 0: self.close_tab(idx)
 
-    # ── Recientes ─────────────────────────────────────────────────────────
     def _refresh_recent_menu(self):
         self._menu_recent.clear()
         recent = get_recent()
@@ -941,7 +869,6 @@ class SoniaMainWindow(QMainWindow):
         a = self.sender()
         if a: self.open_file(a.data())
 
-    # ── Navegación ────────────────────────────────────────────────────────
     def _next_tab(self):
         n = self.tab_widget.count()
         if n > 1:
@@ -956,7 +883,6 @@ class SoniaMainWindow(QMainWindow):
         if idx < self.tab_widget.count():
             self.tab_widget.setCurrentIndex(idx)
 
-    # ── Fuente ────────────────────────────────────────────────────────────
     def _font_size_up(self):   self._change_font_size(+1)
     def _font_size_down(self): self._change_font_size(-1)
     def _font_size_reset(self): self._apply_font_size_all(13)
@@ -971,7 +897,7 @@ class SoniaMainWindow(QMainWindow):
         self._apply_font_size_all(size)
 
     def _apply_font_size_all(self, size: int):
-        """Aplica el tamaño de fuente a todos los tabs y lo persiste."""
+
         for i in range(self.tab_widget.count()):
             tab = self.tab_widget.widget(i)
             if isinstance(tab, SplitEditorContainer):
@@ -986,7 +912,6 @@ class SoniaMainWindow(QMainWindow):
                     )
         save_font_size(size)
 
-    # ── Árbol ─────────────────────────────────────────────────────────────
     def _tree_open_file(self, index):
         path = self.fs_model.filePath(index)
         if os.path.isfile(path):
@@ -994,16 +919,16 @@ class SoniaMainWindow(QMainWindow):
             self.right_panel.terminal_widget.set_cwd(str(Path(path).parent))
 
     def _tree_auto_repo(self, index):
-        """Al hacer clic en cualquier item del árbol, auto-detectar repo git."""
+
         path = self.fs_model.filePath(index)
         if not path:
             return
-        # Usar la carpeta del item (sea archivo o directorio)
+
         folder = path if os.path.isdir(path) else str(Path(path).parent)
         self._update_repo(folder)
 
     def _update_repo(self, folder: str) -> None:
-        """Actualiza _repo_path y notifica git_panel si está visible."""
+
         if folder == self._repo_path:
             return
         self._repo_path = folder
@@ -1022,7 +947,6 @@ class SoniaMainWindow(QMainWindow):
                 self.git_panel.set_repo(folder)
             save_folder(folder)
 
-    # ── Paneles ───────────────────────────────────────────────────────────
     def toggle_file_tree(self):
         self._file_tree_visible = not self._file_tree_visible
         if self._file_tree_visible:
@@ -1069,7 +993,6 @@ class SoniaMainWindow(QMainWindow):
         tab = self._cur_tab()
         if tab and tab.has_split(): tab.close_split()
 
-    # ── Panel inferior ────────────────────────────────────────────────────
     def _toggle_bottom_problems(self):
         if self.bottom_panel.isVisible() and self.bottom_panel._active_tab == 0:
             self.bottom_panel.setVisible(False)
@@ -1097,7 +1020,6 @@ class SoniaMainWindow(QMainWindow):
     def _goto_search_result(self, filepath: str, line_1: int):
         self._goto_problem_line(filepath, line_1 - 1)
 
-    # ── Command Palette ───────────────────────────────────────────────────
     def _open_palette(self):
         folder = self.fs_model.rootPath() or str(Path.home())
         self._palette.set_folder(folder)
@@ -1125,7 +1047,6 @@ class SoniaMainWindow(QMainWindow):
         ]:
             self._palette.register_command(cmd_id, label, cb)
 
-    # ── Idioma ────────────────────────────────────────────────────────────
     def _change_language(self):
         a = self.sender()
         if a:
@@ -1135,7 +1056,6 @@ class SoniaMainWindow(QMainWindow):
                 QMessageBox.StandardButton.Ok,
             )
 
-    # ── Linter → panel problemas ──────────────────────────────────────────
     def _force_relint(self):
         tab = self._cur_tab()
         if tab and tab.primary._lint_mgr is not None:
@@ -1147,7 +1067,6 @@ class SoniaMainWindow(QMainWindow):
                 tab.filepath or "", errors
             )
 
-    # ── Ejecutar ──────────────────────────────────────────────────────────
     def _run_current(self):
         tab = self._cur_tab()
         if not tab: return
@@ -1165,7 +1084,6 @@ class SoniaMainWindow(QMainWindow):
             self.toggle_right_panel()
         run_file(tab.filepath, self.right_panel.terminal_widget, self)
 
-    # ── Helpers ───────────────────────────────────────────────────────────
     def _cur_tab(self):
         w = self.tab_widget.currentWidget()
         return w if isinstance(w, SplitEditorContainer) else None
@@ -1178,7 +1096,7 @@ class SoniaMainWindow(QMainWindow):
         for i in range(self.tab_widget.count()):
             if self.tab_widget.widget(i) is tab:
                 title = tab.get_title()
-                # Prefijo • cuando hay cambios sin guardar
+
                 if tab.is_modified():
                     title = f"• {title}"
                 self.tab_widget.setTabText(i, title)
@@ -1243,10 +1161,9 @@ class SoniaMainWindow(QMainWindow):
         dlg = SnippetEditorDialog(self)
         dlg.exec()
 
-    # ── Drag & drop ───────────────────────────────────────────────────────
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
-            # Aceptar solo si hay al menos un archivo (no directorios)
+
             for url in event.mimeData().urls():
                 if url.isLocalFile():
                     from pathlib import Path as _P
@@ -1264,7 +1181,6 @@ class SoniaMainWindow(QMainWindow):
                     self.open_file(path)
         event.acceptProposedAction()
 
-    # ── Cierre ────────────────────────────────────────────────────────────
     def toggle_symbols_panel(self):
         self._symbols_panel_visible = not self._symbols_panel_visible
         if self._symbols_panel_visible:
@@ -1333,7 +1249,7 @@ class SoniaMainWindow(QMainWindow):
             e.navigate_forward()
 
     def closeEvent(self, event):
-        # Preguntar por cada tab modificado individualmente
+
         for i in range(self.tab_widget.count()):
             tab = self.tab_widget.widget(i)
             if not (isinstance(tab, SplitEditorContainer) and tab.is_modified()):
@@ -1353,17 +1269,16 @@ class SoniaMainWindow(QMainWindow):
                 return
             if r == QMessageBox.StandardButton.Save:
                 if not tab.save():
-                    # El guardado falló (p.ej. sin ruta y el usuario canceló
-                    # el diálogo de "guardar como") — abortar el cierre
+
                     event.ignore()
                     return
-            # Discard → continuar con el siguiente tab sin guardar
+
         save_window(self)
         save_session(self)
         save_folder(self.fs_model.rootPath())
         e = self._cur_editor()
         if e: save_font_size(e.font().pointSize())
-        # Guardar cursor de todos los tabs abiertos
+
         for i in range(self.tab_widget.count()):
             w = self.tab_widget.widget(i)
             if isinstance(w, SplitEditorContainer):

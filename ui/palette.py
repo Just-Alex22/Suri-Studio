@@ -1,13 +1,3 @@
-# ui/palette.py — Command Palette (Ctrl+P)
-#
-# Fix principal: el filtrado fuzzy se mueve a un QThread dedicado
-# para que nunca bloquee el event loop, incluso con miles de archivos.
-#
-# Flujo:
-#   1. Usuario escribe → timer 80ms → lanza FilterWorker
-#   2. FilterWorker hace el scoring en background
-#   3. Al terminar emite resultados → se pintan en la lista
-#   Si llega otra tecla mientras filtra, cancela el worker anterior.
 
 from __future__ import annotations
 import os
@@ -23,10 +13,6 @@ from PySide6.QtGui  import QColor
 from core.theme import VSCode
 from core.translate import tr
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Constantes
-# ─────────────────────────────────────────────────────────────────────────────
 _SKIP_DIRS = {'.git', '__pycache__', 'node_modules', '.venv', 'venv',
               '.tox', 'dist', 'build', '.mypy_cache', '.ruff_cache',
               '.pytest_cache', 'target', 'out', '.idea', '.vscode'}
@@ -43,12 +29,8 @@ MAX_RESULTS   = 40
 _KIND_FILE    = "file"
 _KIND_CMD     = "cmd"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Indexador de archivos (corre una sola vez por carpeta)
-# ─────────────────────────────────────────────────────────────────────────────
 class FileIndexWorker(QThread):
-    done = Signal(list)   # lista de rutas absolutas
+    done = Signal(list)
 
     def __init__(self, folder: str):
         super().__init__()
@@ -75,20 +57,16 @@ class FileIndexWorker(QThread):
         if not self._cancelled:
             self.done.emit(results)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  Worker de filtrado fuzzy (corre en cada keystroke)
-# ─────────────────────────────────────────────────────────────────────────────
 def _score(query: str, text: str) -> int:
-    """Scoring fuzzy simple. Devuelve 0 si no hay coincidencia."""
+
     q = query.lower()
     t = text.lower()
     if not q:
         return 1
-    # Substring exacto: mayor score cuanto más al principio
+
     if q in t:
         return 200 - t.index(q)
-    # Coincidencia por letras en orden
+
     idx = 0
     bonus = 0
     prev  = -1
@@ -97,14 +75,13 @@ def _score(query: str, text: str) -> int:
         if pos == -1:
             return 0
         if pos == prev + 1:
-            bonus += 2   # letras consecutivas
+            bonus += 2
         idx  = pos + 1
         prev = pos
     return 10 + bonus
 
-
 class FilterWorker(QThread):
-    done = Signal(list)   # [(score, filepath), ...]
+    done = Signal(list)
 
     def __init__(self, query: str, files: list[str],
                  folder: str, max_results: int = MAX_RESULTS):
@@ -121,7 +98,7 @@ class FilterWorker(QThread):
     def run(self) -> None:
         q = self._query
         if not q:
-            # Sin query: mostrar los últimos archivos indexados
+
             result = [(0, f) for f in self._files[-(self._max):][::-1]]
             if not self._cancelled:
                 self.done.emit(result)
@@ -134,7 +111,7 @@ class FilterWorker(QThread):
             name  = Path(fpath).name
             s     = _score(q, name)
             if s == 0:
-                # Intentar contra la ruta relativa
+
                 rel = fpath[len(self._folder):].lstrip("/\\") if self._folder else fpath
                 s   = _score(q, rel)
             if s > 0:
@@ -144,10 +121,6 @@ class FilterWorker(QThread):
         if not self._cancelled:
             self.done.emit(scored[:self._max])
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  QSS del popup
-# ─────────────────────────────────────────────────────────────────────────────
 _QSS = f"""
 QDialog {{
     background: {VSCode.BG_LIGHT};
@@ -190,10 +163,6 @@ QLabel#hint {{
 }}
 """
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  CommandPalette
-# ─────────────────────────────────────────────────────────────────────────────
 class CommandPalette(QDialog):
     open_file   = Signal(str)
     run_command = Signal(str)
@@ -203,10 +172,7 @@ class CommandPalette(QDialog):
             parent,
             Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
         )
-        # NO usar WA_TranslucentBackground: en compositors Wayland sin
-        # soporte de alpha channel (LabWC, sway, river…) el fondo queda
-        # negro sólido en vez de transparente. Usamos colores opacos y
-        # borde visible para el mismo efecto visual.
+
         self.setStyleSheet(_QSS)
         self.setFixedWidth(640)
 
@@ -226,14 +192,12 @@ class CommandPalette(QDialog):
         hint.setObjectName("hint")
         lay.addWidget(hint)
 
-        # Estado interno
         self._all_files:      list[str] = []
         self._commands:       list[tuple[str, str, object]] = []
         self._folder:         str = ""
         self._index_worker:   FileIndexWorker | None = None
         self._filter_worker:  FilterWorker    | None = None
 
-        # Timer para debounce — espera 80ms de silencio antes de filtrar
         self._debounce = QTimer(self)
         self._debounce.setSingleShot(True)
         self._debounce.setInterval(80)
@@ -243,7 +207,6 @@ class CommandPalette(QDialog):
         self._input.returnPressed.connect(self._accept_selected)
         self._list.itemActivated.connect(self._accept_item)
 
-    # ── API pública ───────────────────────────────────────────────────────
     def register_command(self, cmd_id: str, label: str, callback) -> None:
         self._commands.append((cmd_id, label, callback))
 
@@ -253,7 +216,6 @@ class CommandPalette(QDialog):
         self._folder    = folder
         self._all_files = []
 
-        # Cancelar indexación anterior si sigue corriendo
         if self._index_worker and self._index_worker.isRunning():
             self._index_worker.cancel()
             self._index_worker.wait(200)
@@ -271,27 +233,23 @@ class CommandPalette(QDialog):
                 pw.geometry().top() + 60,
             )
         self._input.clear()
-        self._render_results([])   # lista vacía mientras filtra
+        self._render_results([])
         self._start_filter()
         self.show()
         self._input.setFocus()
 
-    # ── Indexación ────────────────────────────────────────────────────────
     def _on_indexed(self, files: list[str]) -> None:
         self._all_files = files
         if self.isVisible():
             self._start_filter()
 
-    # ── Filtrado asíncrono ────────────────────────────────────────────────
     def _start_filter(self) -> None:
         query = self._input.text().strip()
 
-        # Modo comando
         if query.startswith(">"):
             self._filter_commands(query[1:].strip())
             return
 
-        # Cancelar worker anterior
         if self._filter_worker and self._filter_worker.isRunning():
             self._filter_worker.cancel()
             self._filter_worker.wait(100)
@@ -323,11 +281,10 @@ class CommandPalette(QDialog):
         if self._list.count() > 0:
             self._list.setCurrentRow(0)
 
-    # ── Renderizado ───────────────────────────────────────────────────────
     def _render_results(self, scored: list) -> None:
         self._list.clear()
         if not scored and not self._input.text().strip():
-            # Sin query y sin archivos todavía
+
             if not self._all_files:
                 it = QListWidgetItem(f"  {tr('Indexing files…')}")
                 it.setForeground(QColor(VSCode.FG_DIM))
@@ -348,7 +305,7 @@ class CommandPalette(QDialog):
             except Exception:
                 rel = fpath
             name = Path(fpath).name
-            # Nombre en blanco, ruta relativa más tenue
+
             it = QListWidgetItem(f"  {name}   {rel}")
             it.setData(Qt.ItemDataRole.UserRole, (_KIND_FILE, fpath))
             it.setToolTip(fpath)
@@ -357,7 +314,6 @@ class CommandPalette(QDialog):
         if self._list.count() > 0:
             self._list.setCurrentRow(0)
 
-    # ── Aceptar ───────────────────────────────────────────────────────────
     def _accept_selected(self) -> None:
         item = self._list.currentItem()
         if item:
@@ -377,7 +333,6 @@ class CommandPalette(QDialog):
                     cb()
                     break
 
-    # ── Teclado ───────────────────────────────────────────────────────────
     def keyPressEvent(self, event) -> None:
         key = event.key()
         n   = self._list.count()
@@ -397,7 +352,7 @@ class CommandPalette(QDialog):
             super().keyPressEvent(event)
 
     def hideEvent(self, event) -> None:
-        # Cancelar workers al cerrar
+
         if self._filter_worker and self._filter_worker.isRunning():
             self._filter_worker.cancel()
         super().hideEvent(event)
