@@ -17,7 +17,7 @@
 
 **Suri Studio** is a free and open source integrated development environment built with Python and PySide6. It provides syntax highlighting, live linting, autocompletion, an integrated git client, code execution, and a full PTY terminal, all in a single window, with no external runtime dependencies beyond Python and PySide6.
 
-Suri Studio is developed as part of the [CuerdOS](https://github.com/CuerdOS) project and targets Linux desktop environments, with additional support for macOS and Windows.
+Suri Studio targets Linux desktop environments, with additional support for macOS and Windows.
 
 ## Features
 
